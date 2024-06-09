@@ -4,7 +4,7 @@
 
 @layer base {
   a {
-    @apply text-blue-500;
+    @apply text-orange-500;
   }
 }
 
@@ -18,8 +18,4 @@
   .btn {
     @apply w-full bg-black h-10 text-white rounded-sexy-name mt-tomato;
   }
-}
-
-.btn {
-  @apply w-full bg-black h-10 text-white rounded-sexy-name mt-tomato;
 }
