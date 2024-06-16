@@ -2,6 +2,11 @@
 
 import { z } from "zod";
 
+// At least one uppercase letter, one lowercase letter, one number and one special character
+const passwordRegex = new RegExp(
+  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).+$/
+);
+
 /* function checkUsername(username: string) {
   return !username.includes("potato");
 } */
@@ -26,6 +31,9 @@ const formSchema = z
       })
       .min(3, "Way too short!!!")
       .max(10, "That is too long!!!")
+      .toLowerCase()
+      .trim()
+      .transform((username) => `🔥 ${username} 🔥`)
       .refine(
         // (username) => (username.includes("potato") ? false : true),
         // (username) => !username.includes("potato"),
@@ -38,12 +46,18 @@ const formSchema = z
         invalid_type_error: "Please enter a valid email address.",
         required_error: "Email address is required.",
       })
-      .email(),
+      .email()
+      // .trim() // email()은 자동으로 trim()해주는 기능이 있음
+      .toLowerCase(),
     password: z
       .string()
-      .min(10, "Password must be at least 10 characters long.")
-      .max(24, "Password must be no more than 24 characters long."),
-    confirm_password: z.string().min(10).max(24),
+      .min(8, "Password must be at least 8 characters long.")
+      .max(24, "Password must be no more than 24 characters long.")
+      .regex(
+        passwordRegex,
+        "A password must have lowercase, UPPERCASE, a number and special characters."
+      ),
+    confirm_password: z.string().min(8).max(24),
   })
   .refine(checkPasswords, {
     message: "Both password should be the same!",
@@ -59,7 +73,9 @@ export async function createAccount(prevState: any, formData: FormData) {
   };
   const result = formSchema.safeParse(data);
   if (!result.success) {
-    console.log(result.error.flatten());
+    // console.log(result.error.flatten());
     return result.error.flatten();
+  } else {
+    console.log(result.data);
   }
 }
