@@ -1,11 +1,12 @@
 "use server";
 
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_REGEX,
+  PASSWORD_REGEX_ERROR,
+} from "@/lib/constants";
 import { z } from "zod";
-
-// At least one uppercase letter, one lowercase letter, one number and one special character
-const passwordRegex = new RegExp(
-  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).+$/
-);
 
 /* function checkUsername(username: string) {
   return !username.includes("potato");
@@ -29,8 +30,6 @@ const formSchema = z
         // required_error는 검증데이터에 username 자체가 없을 때 발생
         required_error: "Where is my username?",
       })
-      .min(3, "Way too short!!!")
-      .max(10, "That is too long!!!")
       .toLowerCase()
       .trim()
       .transform((username) => `🔥 ${username} 🔥`)
@@ -51,13 +50,16 @@ const formSchema = z
       .toLowerCase(),
     password: z
       .string()
-      .min(8, "Password must be at least 8 characters long.")
-      .max(24, "Password must be no more than 24 characters long.")
-      .regex(
-        passwordRegex,
-        "A password must have lowercase, UPPERCASE, a number and special characters."
-      ),
-    confirm_password: z.string().min(8).max(24),
+      .min(PASSWORD_MIN_LENGTH, "Password must be at least 8 characters long.")
+      .max(
+        PASSWORD_MAX_LENGTH,
+        "Password must be no more than 24 characters long."
+      )
+      .regex(PASSWORD_REGEX, PASSWORD_REGEX_ERROR),
+    confirm_password: z
+      .string()
+      .min(PASSWORD_MIN_LENGTH)
+      .max(PASSWORD_MAX_LENGTH),
   })
   .refine(checkPasswords, {
     message: "Both password should be the same!",
