@@ -14,7 +14,7 @@ export default function Input({
   // Spread 연산자: 이름은 rest가 아닌 무엇이든지 상관없음
   ...rest
 }: InputProps & InputHTMLAttributes<HTMLInputElement>) {
-  console.log(rest);
+  // console.log(rest);
   return (
     <div className="flex flex-col gap-2">
       <input

@@ -37,7 +37,7 @@ export const smsLogin = async (prevState: ActionState, formData: FormData) => {
   } else {
     const result = tokenSchema.safeParse(token);
     if (!result.success) {
-      console.log(result.error.flatten());
+      // console.log(result.error.flatten());
       return {
         token: true,
         error: result.error.flatten(),
