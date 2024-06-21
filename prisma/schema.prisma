@@ -27,6 +27,6 @@ model SMSToken {
   updated_at DateTime @updatedAt
   // user가 DB에 저장되는 것이 아니라 User모델의 id만 userId에 저장함
   // SMSToken모델의 userId 필드의 값이 User모델의 id값을 참조한다는 관계만 안내
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
 }

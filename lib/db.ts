@@ -17,6 +17,7 @@ async function test() {
     where: {
       id: 1,
     },
+    // include 객체는 관계를 포함하는 데 사용됨
     include: {
       user: true,
     },
