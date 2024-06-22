@@ -6,12 +6,12 @@ import {
   PASSWORD_REGEX,
   PASSWORD_REGEX_ERROR,
 } from "@/lib/constants";
+import db from "@/lib/db";
 import { z } from "zod";
 
-/* function checkUsername(username: string) {
+function checkUsername(username: string) {
   return !username.includes("potato");
-} */
-const checkUsername = (username: string) => !username.includes("potato");
+}
 
 const checkPasswords = ({
   password,
@@ -21,6 +21,40 @@ const checkPasswords = ({
   confirm_password: string;
 }) => password === confirm_password;
 
+// check the username already taken
+const checkUniqueUsername = async (username: string) => {
+  const user = await db.user.findUnique({
+    where: {
+      username,
+    },
+    // how to take the data you want
+    select: {
+      id: true,
+    },
+  });
+  // need to return boolean for .refine function
+  /* if (user) {
+    return false;
+  } else {
+    return true;
+  } */
+  return !Boolean(user); // if user is exist, return false!
+};
+
+const checkUniqueEmail = async (email: string) => {
+  // check if the email is already used
+  const user = await db.user.findUnique({
+    where: {
+      email,
+    },
+    select: {
+      id: true,
+    },
+  });
+  return !Boolean(user);
+};
+
+// Zod
 const formSchema = z
   .object({
     username: z
@@ -32,14 +66,16 @@ const formSchema = z
       })
       .toLowerCase()
       .trim()
-      .transform((username) => `🔥 ${username} 🔥`)
+      // .transform((username) => `🔥 ${username} 🔥`)
       .refine(
         // (username) => (username.includes("potato") ? false : true),
         // (username) => !username.includes("potato"),
         // zod이 알아서 checkUsername함수의 인자로 username을 보냄
         checkUsername,
         "No potato allowed!"
-      ),
+      )
+      // checkUniqueUsername함수는 async-await 사용
+      .refine(checkUniqueUsername, "This username is already taken."),
     email: z
       .string({
         invalid_type_error: "Please enter a valid email address.",
@@ -47,15 +83,19 @@ const formSchema = z
       })
       .email()
       // .trim() // email()은 자동으로 trim()해주는 기능이 있음
-      .toLowerCase(),
+      .toLowerCase()
+      .refine(
+        checkUniqueEmail,
+        "There is an account already registered with that email."
+      ),
     password: z
       .string()
       .min(PASSWORD_MIN_LENGTH, "Password must be at least 8 characters long.")
       .max(
         PASSWORD_MAX_LENGTH,
         "Password must be no more than 24 characters long."
-      )
-      .regex(PASSWORD_REGEX, PASSWORD_REGEX_ERROR),
+      ),
+    // .regex(PASSWORD_REGEX, PASSWORD_REGEX_ERROR),
     confirm_password: z
       .string()
       .min(PASSWORD_MIN_LENGTH)
@@ -73,11 +113,15 @@ export async function createAccount(prevState: any, formData: FormData) {
     password: formData.get("password"),
     confirm_password: formData.get("confirm_password"),
   };
-  const result = formSchema.safeParse(data);
+  // formSchema는 Zod을 사용, 내부에 async-await을 사용하고 있기 때문에 formScema를 호출할 때도 safeParseAsync를 사용해야 함
+  const result = await formSchema.safeParseAsync(data);
   if (!result.success) {
     // console.log(result.error.flatten());
     return result.error.flatten();
   } else {
-    console.log(result.data);
+    // hash password
+    // save the user to db
+    // log the user in
+    // redirect "/home"
   }
 }
