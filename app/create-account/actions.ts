@@ -118,15 +118,17 @@ export async function createAccount(prevState: any, formData: FormData) {
     confirm_password: formData.get("confirm_password"),
   };
   // formSchema는 Zod을 사용, 내부에 async-await을 사용하고 있기 때문에 formScema를 호출할 때도 safeParseAsync를 사용해야 함
-  const result = await formSchema.safeParseAsync(data);
+  // saveParseAsync는 이름이 길기 때문에 spa로 줄여서 사용 가능
+  // spa: alias of safeParseAsync
+  const result = await formSchema.spa(data);
   if (!result.success) {
     // console.log(result.error.flatten());
     return result.error.flatten();
   } else {
-    // hash password
+    /* hash password */
     const hashedPassword = await bcrypt.hash(result.data.password, 12);
     console.log(hashedPassword);
-    // save the user to db
+    /* save the user to db */
     const user = await db.user.create({
       data: {
         username: result.data.username,
@@ -138,7 +140,7 @@ export async function createAccount(prevState: any, formData: FormData) {
       },
     });
     console.log(user);
-    // log the user in with iron-session
+    /* log the user in with iron-session */
     const cookie = await getIronSession(cookies(), {
       cookieName: "delicious-carrot",
       // GitHub에 password가 올라가면 안되므로 .env에 password 저장
@@ -148,7 +150,7 @@ export async function createAccount(prevState: any, formData: FormData) {
     // @ts-ignore: TypeScript가 session이 무엇인지 몰라 발생하는 에러
     cookie.id = user.id;
     await cookie.save();
-    // redirect "/home"
+    /* redirect "/home" */
     redirect("/profile");
   }
 }
