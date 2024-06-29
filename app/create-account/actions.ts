@@ -9,8 +9,6 @@ import {
 import bcrypt from "bcrypt";
 import db from "@/lib/db";
 import { z } from "zod";
-import { getIronSession } from "iron-session";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import getSession from "@/lib/session";
 
@@ -25,39 +23,6 @@ const checkPasswords = ({
   password: string;
   confirm_password: string;
 }) => password === confirm_password;
-
-// check the username already taken
-const checkUniqueUsername = async (username: string) => {
-  const user = await db.user.findUnique({
-    where: {
-      username,
-    },
-    // how to take the data you want
-    select: {
-      id: true,
-    },
-  });
-  // need to return boolean for .refine function
-  /* if (user) {
-    return false;
-  } else {
-    return true;
-  } */
-  return !Boolean(user); // if user is exist, return false!
-};
-
-const checkUniqueEmail = async (email: string) => {
-  // check if the email is already used
-  const user = await db.user.findUnique({
-    where: {
-      email,
-    },
-    select: {
-      id: true,
-    },
-  });
-  return !Boolean(user);
-};
 
 // Zod
 const formSchema = z
@@ -78,9 +43,8 @@ const formSchema = z
         // zod이 알아서 checkUsername함수의 인자로 username을 보냄
         checkUsername,
         "No potato allowed!"
-      )
-      // checkUniqueUsername함수는 async-await 사용
-      .refine(checkUniqueUsername, "This username is already taken."),
+      ),
+    // checkUniqueUsername함수는 async-await 사용
     email: z
       .string({
         invalid_type_error: "Please enter a valid email address.",
@@ -88,11 +52,7 @@ const formSchema = z
       })
       .email()
       // .trim() // email()은 자동으로 trim()해주는 기능이 있음
-      .toLowerCase()
-      .refine(
-        checkUniqueEmail,
-        "There is an account already registered with that email."
-      ),
+      .toLowerCase(),
     password: z
       .string()
       .min(PASSWORD_MIN_LENGTH, "Password must be at least 8 characters long.")
@@ -106,6 +66,48 @@ const formSchema = z
       .min(PASSWORD_MIN_LENGTH)
       .max(PASSWORD_MAX_LENGTH),
   })
+  // data는 object(username, email, password, confirm_password)임
+  // {}을 이용해 꺼내올 수 있음
+  // .superRefine((data, ctx) => {});
+  .superRefine(async ({ username }, ctx) => {
+    const user = await db.user.findUnique({
+      where: {
+        username,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (user) {
+      ctx.addIssue({
+        code: "custom",
+        message: "This username is already taken.",
+        path: ["username"],
+        fatal: true, // fatal issue 생성
+      });
+      return z.NEVER; // NEVER를 반환
+    }
+  })
+  .superRefine(async ({ email }, ctx) => {
+    const user = await db.user.findUnique({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (user) {
+      ctx.addIssue({
+        code: "custom",
+        message: "This email is already taken.",
+        path: ["email"],
+        fatal: true, // fatal issue 생성
+      });
+      return z.NEVER; // NEVER를 반환
+    }
+  })
+  // fatal issue로 NEVER를 반환하면 .superRefine 이후의 다른 .refine은 실행하지 않음
   .refine(checkPasswords, {
     message: "Both password should be the same!",
     path: ["confirm_password"],
