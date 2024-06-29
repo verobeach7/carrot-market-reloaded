@@ -1,18 +1,46 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import getSession from "./lib/session";
+
+/* interface Routes {
+  [key: string]: boolean;
+}
+
+// Array에서 존재 여부를 확인하는 것보다 Object에서 확인하는 것이 성능이 더 좋음
+const publicOnlyUrls: Routes = {
+  "/": true,
+  "/login": true,
+  "/sms": true,
+  "/create-account": true,
+};
 
 export async function middleware(request: NextRequest) {
-  console.log("hello");
+  const session = await getSession();
+  const exists = publicOnlyUrls[request.nextUrl.pathname];
+  if (!session.id) {
+    if (!exists) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  } else {
+    return NextResponse.redirect(new URL("/products", request.url));
+  }
+} */
+
+const publicUrls = new Set(["/", "/login", "/sms", "/create-account"]);
+
+export async function middleware(request: NextRequest) {
+  const isPublicPath = publicUrls.has(request.nextUrl.pathname);
+  const isLoggedIn = Boolean((await getSession()).id);
+
+  if (!isLoggedIn && !isPublicPath) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  if (isLoggedIn && isPublicPath) {
+    return NextResponse.redirect(new URL("/products", request.url));
+  }
 }
 
 export const config = {
-  //   matcher: ["/", "/profile", "/create-account", "/user/:path*"],
-  /*
-   * Match all request paths except for the ones starting with:
-   * - api (API routes)
-   * - _next/static (static files)
-   * - _next/image (image optimization files)
-   * - favicon.ico (favicon file)
-   */
   matcher: [
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
