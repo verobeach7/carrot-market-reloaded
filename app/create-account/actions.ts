@@ -12,6 +12,7 @@ import { z } from "zod";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import getSession from "@/lib/session";
 
 function checkUsername(username: string) {
   return !username.includes("potato");
@@ -140,17 +141,9 @@ export async function createAccount(prevState: any, formData: FormData) {
       },
     });
     console.log(user);
-    /* log the user in with iron-session */
-    const cookie = await getIronSession(cookies(), {
-      cookieName: "delicious-carrot",
-      // GitHub에 password가 올라가면 안되므로 .env에 password 저장
-      // TypeScript에게 .env 안에 COOKIE_PASSWORD가 무조건 존재한다는 것 알려주기
-      password: process.env.COOKIE_PASSWORD!,
-    });
-    // @ts-ignore: TypeScript가 session이 무엇인지 몰라 발생하는 에러
-    cookie.id = user.id;
-    await cookie.save();
-    /* redirect "/home" */
+    const session = await getSession();
+    session.id = user.id;
+    await session.save();
     redirect("/profile");
   }
 }
