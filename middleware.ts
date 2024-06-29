@@ -1,8 +1,18 @@
-import { NextRequest } from "next/server";
+import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import getSession from "./lib/session";
 
-export function middleware(request: NextRequest) {
-  // 단순 url string
-  console.log(request.url);
-  // Next에서 생성해 놓은 Object로 여러가지 properies를 이미 가지고 있음
-  console.log(request.nextUrl);
+export async function middleware(request: NextRequest) {
+  // console.log(request.cookies.getAll());
+  console.log(cookies());
+  const session = await getSession();
+  console.log(session);
+  if (request.nextUrl.pathname === "/profile") {
+    /* return Response.json({
+      error: "you are not allowed here!",
+    }); */
+    // return Response.redirect(new URL("/", request.url));
+    // NextResponse는 Response의 확장형
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 }
