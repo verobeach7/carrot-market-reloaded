@@ -75,6 +75,7 @@ export const login = async (prevState: any, formData: FormData) => {
     if (ok) {
       const session = await getSession();
       session.id = user!.id;
+      await session.save();
       redirect("/profile");
     } else {
       // zod인척 zod이 return하는 형태로 return을 해주면 에러를 보여줄 수 있음
