@@ -1,29 +1,21 @@
 import db from "@/lib/db";
-import getSession from "@/lib/session";
-import { notFound, redirect } from "next/navigation";
+import getAccessToken from "@/lib/github/get-access-token";
+import getUserEmail from "@/lib/github/get-user-email";
+import getUserProfile from "@/lib/github/get-user-profile";
+import { LogIn } from "@/lib/login";
+import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 
 // url에서 code를 받기 위해 request를 받아와야 함
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
-  if (!code) notFound();
-  // console.log(code);
-  const accessTokenParams = new URLSearchParams({
-    client_id: process.env.GITHUB_CLIENT_ID!,
-    client_secret: process.env.GITHUB_CLIENT_SECRET!,
-    code,
-  }).toString();
-  const accessTokenUrl = `https://github.com/login/oauth/access_token?${accessTokenParams}`;
-  // Post Request: header를 추가하여 response를 json으로 받을 수 있음
-  const { error, access_token } = await (
-    await fetch(accessTokenUrl, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-      },
-    })
-  ).json();
+  if (!code)
+    return new Response(null, {
+      status: 400,
+    });
+  const { error, access_token } = await getAccessToken(code);
   if (error) {
+    // 에러가 발생했음을 알리고 새로운 페이지로 redirect 할 수 있도록 하는 등 더 세밀한 처리 필요, 우선은 지금처럼 처리, 사용자 경험을 좋게 만들어 줄 필요 있음
     return new Response(null, {
       status: 400,
     });
@@ -34,15 +26,9 @@ export async function GET(request: NextRequest) {
     id,
     avatar_url,
     login: username,
-  } = await (
-    await fetch("https://api.github.com/user", {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-      cache: "no-cache",
-    })
-  ).json();
+  } = await getUserProfile(access_token);
   // 사용자가 있는지 검색
+  const email = await getUserEmail(access_token);
   const user = await db.user.findUnique({
     where: {
       github_id: id + "", // Integer가 String으로 바뀜
@@ -53,24 +39,30 @@ export async function GET(request: NextRequest) {
   });
   // 사용자가 이미 있다면 로그인
   if (user) {
-    const session = await getSession();
-    session.id = user.id;
-    await session.save();
+    await LogIn(user.id);
     return redirect("/profile");
+  } else {
+    const existUsername = await db.user.findUnique({
+      where: {
+        username,
+      },
+      select: {
+        id: true,
+      },
+    });
+    // 사용자가 없다면 사용자를 db에 추가하고 로그인
+    const newUser = await db.user.create({
+      data: {
+        username: existUsername ? `${username}#gh${id}` : username,
+        email,
+        github_id: id + "", // Integer가 String으로 바뀜
+        avatar: avatar_url,
+      },
+      select: {
+        id: true,
+      },
+    });
+    await LogIn(newUser.id);
   }
-  // 사용자가 없다면 사용자를 db에 추가하고 로그인
-  const newUser = await db.user.create({
-    data: {
-      username,
-      github_id: id + "", // Integer가 String으로 바뀜
-      avatar: avatar_url,
-    },
-    select: {
-      id: true,
-    },
-  });
-  const session = await getSession();
-  session.id = newUser.id;
-  await session.save();
   return redirect("/profile");
 }

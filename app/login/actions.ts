@@ -9,8 +9,8 @@ import {
 } from "@/lib/constants";
 import db from "@/lib/db";
 import { z } from "zod";
-import getSession from "@/lib/session";
 import { redirect } from "next/navigation";
+import { LogIn } from "@/lib/login";
 
 const checkEmailExist = async (email: string) => {
   /* find a user with the email */
@@ -73,9 +73,7 @@ export const login = async (prevState: any, formData: FormData) => {
     // console.log(ok);
     /* log the user in and redirect "/profile"*/
     if (ok) {
-      const session = await getSession();
-      session.id = user!.id;
-      await session.save();
+      await LogIn(user!.id);
       redirect("/profile");
     } else {
       // zod인척 zod이 return하는 형태로 return을 해주면 에러를 보여줄 수 있음
