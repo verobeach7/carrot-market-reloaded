@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { redirect } from "next/navigation";
 
 // 어차피 사용자는 url을 다 볼 수 있으니 여기서 하는 작업은 비밀이 아님
 // 별도의 파일로 분리해 놓음으로써 components/social-login.tsx의 Link href를 깨끗하게 유지할 수 있음
@@ -11,5 +11,5 @@ export function GET() {
   };
   const formattedParams = new URLSearchParams(params).toString();
   const finalUrl = `${baseURL}?${formattedParams}`;
-  return NextResponse.redirect(finalUrl);
+  return redirect(finalUrl);
 }
