@@ -25,7 +25,14 @@ export async function middleware(request: NextRequest) {
   }
 } */
 
-const publicUrls = new Set(["/", "/login", "/sms", "/create-account"]);
+const publicUrls = new Set([
+  "/",
+  "/login",
+  "/sms",
+  "/create-account",
+  "/github/start",
+  "/github/complete",
+]);
 
 export async function middleware(request: NextRequest) {
   const isPublicPath = publicUrls.has(request.nextUrl.pathname);
@@ -42,6 +49,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
