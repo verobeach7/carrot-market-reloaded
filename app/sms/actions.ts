@@ -1,5 +1,6 @@
 "use server";
 
+import twilio from "twilio";
 import crypto from "crypto";
 import { z } from "zod";
 import validator from "validator";
@@ -102,6 +103,16 @@ export const smsLogin = async (prevState: ActionState, formData: FormData) => {
         },
       });
       // send the token using twilio(SMS)
+      const client = twilio(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTH_TOKEN
+      );
+      await client.messages.create({
+        body: `Your Carrot Market verification code is ${token}`,
+        from: process.env.TWILIO_PHONE_NUMBER!,
+        // to: result.data // 누구의 번호든 가능해야 하지만 체험판이어서 내가 가입한 번호로만 문자전송 가능
+        to: process.env.TWILIO_MY_PHONE_NUMBER!,
+      });
       return {
         token: true,
       };
