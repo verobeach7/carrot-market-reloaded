@@ -5,6 +5,7 @@ import { z } from "zod";
 import validator from "validator";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
+import { LogIn } from "@/lib/login";
 
 const phoneSchema = z
   .string()
@@ -14,8 +15,24 @@ const phoneSchema = z
     "Wrong phone format."
   );
 
+async function tokenExists(token: number) {
+  const exists = await db.sMSToken.findUnique({
+    where: {
+      token: token.toString(),
+    },
+    select: {
+      id: true,
+    },
+  });
+  return Boolean(exists);
+}
+
 // coerce를 이용해 입력받은 값을 원하는 type으로 바꿔줄 수 있음
-const tokenSchema = z.coerce.number().min(100000).max(999999);
+const tokenSchema = z.coerce
+  .number()
+  .min(100000)
+  .max(999999)
+  .refine(tokenExists, "This token does not exist.");
 
 interface ActionState {
   token: boolean;
@@ -65,14 +82,17 @@ export const smsLogin = async (prevState: ActionState, formData: FormData) => {
       });
       // create token
       const token = await getToken();
+      // save the token on db.sMSToken
       await db.sMSToken.create({
         data: {
           token,
           user: {
             connectOrCreate: {
+              // db에 이미 전화번호가 같은 사용자가 있으면 token과 user 연결
               where: {
                 phone: result.data,
               },
+              // db에 이 전화번호를 사용하는 사용자가 없으면 새로운 user 생성
               create: {
                 username: crypto.randomBytes(10).toString("hex"),
                 phone: result.data,
@@ -88,7 +108,7 @@ export const smsLogin = async (prevState: ActionState, formData: FormData) => {
     }
   } else {
     /* Token이 있으면 */
-    const result = tokenSchema.safeParse(token);
+    const result = await tokenSchema.spa(token);
     if (!result.success) {
       // console.log(result.error.flatten());
       return {
@@ -97,7 +117,26 @@ export const smsLogin = async (prevState: ActionState, formData: FormData) => {
       };
     } else {
       /* After verifying Token */
-      redirect("/");
+      // get the userId of the token
+      const token = await db.sMSToken.findUnique({
+        where: {
+          token: result.data.toString(),
+        },
+        select: {
+          id: true,
+          userId: true,
+        },
+      });
+      // token이 있다는 것이 위에서 검증됐으므로 ! 이용하여 TypeScript에게 확실히 있음을 알리기
+      await LogIn(token!.userId);
+      // 사용 완료한 token db에서 지우기
+      await db.sMSToken.delete({
+        where: {
+          id: token!.id,
+        },
+      });
+      // log the user in
+      redirect("/profile");
     }
   }
 };
