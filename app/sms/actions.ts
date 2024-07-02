@@ -37,6 +37,7 @@ const tokenSchema = z.coerce
 
 interface ActionState {
   token: boolean;
+  phone?: string;
 }
 
 async function getToken() {
@@ -61,7 +62,7 @@ async function getToken() {
 }
 
 export const smsLogin = async (prevState: ActionState, formData: FormData) => {
-  const phone = formData.get("phone");
+  const phone = formData.get("phone") as string | undefined;
   const token = formData.get("token");
   if (!prevState.token) {
     /* Token을 보내기 전 상태: Token이 없으면 */
@@ -115,6 +116,7 @@ export const smsLogin = async (prevState: ActionState, formData: FormData) => {
       });
       return {
         token: true,
+        phone,
       };
     }
   } else {
@@ -123,7 +125,7 @@ export const smsLogin = async (prevState: ActionState, formData: FormData) => {
     if (!result.success) {
       // console.log(result.error.flatten());
       return {
-        token: true,
+        ...prevState,
         error: result.error.flatten(),
       };
     } else {
@@ -136,8 +138,11 @@ export const smsLogin = async (prevState: ActionState, formData: FormData) => {
         select: {
           id: true,
           userId: true,
+          user: true,
         },
       });
+      if (prevState.phone !== token?.user.phone)
+        return { ...prevState, error: { formErrors: ["Invalid token."] } };
       // token이 있다는 것이 위에서 검증됐으므로 ! 이용하여 TypeScript에게 확실히 있음을 알리기
       await LogIn(token!.userId);
       // 사용 완료한 token db에서 지우기
