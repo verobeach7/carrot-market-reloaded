@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import deleteProduct from "../app/products/[id]/action";
+import deleteProduct from "../app/products/[id]/actions";
 import { useCallback, useState } from "react";
 import CustomAlert from "./custom-alert";
 

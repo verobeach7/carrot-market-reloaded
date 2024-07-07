@@ -1,13 +1,14 @@
-import ListProduct from "@/components/list-product";
+import ProductList from "@/components/product-list";
 import db from "@/lib/db";
+import { Prisma } from "@prisma/client";
 
 /* // loading.tsx 확인을 위한 작업
-async function getProducts() {
+async function getInitialProducts() {
   await new Promise((resolve) => {
     setTimeout(resolve, 10000);
   });
 } */
-async function getProducts() {
+async function getInitialProducts() {
   const products = await db.product.findMany({
     select: {
       title: true,
@@ -16,19 +17,26 @@ async function getProducts() {
       photo: true,
       id: true,
     },
+    // take: 몇 개의 데이터를 가져올지 지정할 수 있음
+    take: 1,
+    orderBy: {
+      // asc: 오름차순 - 오래된 것부터 보임, desc: 내림차순 - 최근 것부터 보임
+      created_at: "desc",
+    },
   });
   return products;
 }
 
+// Prisma가 db의 리턴 타입을 알아서 정리해주게 하는 방법. export하여 다른 곳에서 TypeScript를 위해 사용할 수 있음
+export type InitialProducts = Prisma.PromiseReturnType<
+  typeof getInitialProducts
+>;
+
 export default async function Products() {
-  const products = await getProducts();
+  const initialProducts = await getInitialProducts();
   return (
-    <div className="p-5 flex flex-col gap-5">
-      {products.map((product) => (
-        // <ListProduct id={product.id} title={product.title} />
-        // 하나하나 개별적으로 하지 않고 스프레드를 사용하여 한번에 props로 보낼 수 있음
-        <ListProduct key={product.id} {...product} />
-      ))}
+    <div>
+      <ProductList initialProducts={initialProducts} />
     </div>
   );
 }
