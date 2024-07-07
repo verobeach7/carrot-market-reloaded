@@ -21,9 +21,8 @@ export default function ListProduct({
     <Link href={`/products/${id}`} className="flex gap-5">
       {/* 이미지 사이즈가 다양하거나 모를 때는 아래처럼 하여 일관되게 적용할 수 있음 */}
       <div className="relative size-28 rounded-md overflow-hidden">
-        {/* <Image width={200} height={200} src={photo} alt={title} />
-         */}
-        <Image fill src={photo} alt={title} />
+        {/* object-cover: 이미지를 찌그러지지 않게 원본을 유지하면서 채울 수 있음 */}
+        <Image fill src={photo} className="object-cover" alt={title} />
       </div>
       <div className="flex flex-col gap-1 *:text-white">
         <span className="text-lg">{title}</span>
