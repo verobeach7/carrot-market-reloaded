@@ -20,17 +20,6 @@ export default function DeleteBtn({ productId }: DeleteBtnProps) {
     setIsDelete(false);
   }, []);
 
-  async function handleDelete(productId: number) {
-    const res = await deleteProduct(productId);
-    console.log("response: ", res);
-    // if (res) {
-    //   alert("삭제되었습니다");
-    //   router.replace("/products");
-    // } else {
-    //   alert("실패했습니다");
-    // }
-  }
-
   return (
     <>
       {isDelete ? (
