@@ -1,14 +1,26 @@
 "use server";
 
 import db from "@/lib/db";
+import getSession from "@/lib/session";
 
-// 물건 삭제
-// deleteMany를 사용해서 result가 0이면 삭제 실패
-export const deleteProduct = async (id: number) => {
-  const result = await db.product.deleteMany({
+export default async function deleteProductAction(productId: number) {
+  const session = await getSession();
+  const userId = session.id;
+
+  if (!userId) {
+    return false;
+  }
+
+  const isDeleted = await db.product.delete({
     where: {
-      id: 2, // 일부러 실패하게 했음
+      id: productId,
+      userId,
     },
   });
-  return result.count;
-};
+
+  if (!isDeleted) {
+    return false;
+  }
+
+  return true;
+}

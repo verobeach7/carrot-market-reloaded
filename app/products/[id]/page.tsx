@@ -5,7 +5,6 @@ import { UserIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { deleteProduct } from "./action";
 import DeleteBtn from "@/components/delete-btn";
 
 async function getIsOwner(userId: number) {
@@ -83,8 +82,14 @@ export default async function ProductDetail({
         <span className="font-semibold text-xl">
           {formatToWon(product.price)}원
         </span>
+        {isOwner ? <DeleteBtn productId={id} /> : null}
         {isOwner ? (
-          <DeleteBtn productId={id} deleteFunction={deleteProduct} />
+          <Link
+            className="bg-orange-500 px-5 py-2.5 rounded-md text-white font-semibold"
+            href={``}
+          >
+            채팅보기
+          </Link>
         ) : (
           <Link
             className="bg-orange-500 px-5 py-2.5 rounded-md text-white font-semibold"

@@ -1,39 +1,31 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import CustomAlert from "./custom-alert";
+import { useRouter } from "next/navigation";
+import deleteProduct from "../app/products/[id]/action";
 
-interface DeleteButtonProps {
+type DeleteBtnProps = {
   productId: number;
-  deleteFunction: Function;
-}
+};
 
-export default function DeleteBtn({
-  productId,
-  deleteFunction,
-}: Readonly<DeleteButtonProps>) {
-  const [isDelete, setIsDelete] = useState(false);
-
-  const handleClose = useCallback(() => {
-    setIsDelete(false);
-  }, []);
+export default function DeleteBtn({ productId }: DeleteBtnProps) {
+  const router = useRouter();
+  async function handleDelete() {
+    const res = await deleteProduct(productId);
+    console.log("response: ", res);
+    if (res) {
+      alert("삭제되었습니다");
+      router.replace("/products");
+    } else {
+      alert("실패했습니다");
+    }
+  }
 
   return (
-    <>
-      {isDelete ? (
-        <CustomAlert
-          text="삭제하시겠습니까?"
-          type="D"
-          onClose={handleClose}
-          onConfirm={() => deleteFunction(productId)}
-        />
-      ) : null}
-      <button
-        className="bg-red-500 px-5 py-2.5 rounded-md text-white font-semibold disabled:bg-neutral-500"
-        onClick={() => setIsDelete(true)}
-      >
-        삭제하기
-      </button>
-    </>
+    <button
+      className="rounded-md bg-red-500 px-5 py-2.5 font-semibold text-white"
+      onClick={handleDelete}
+    >
+      삭제하기
+    </button>
   );
 }
