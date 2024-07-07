@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import DeleteBtn from "@/components/delete-btn";
+import deleteProduct from "./action";
 
 async function getIsOwner(userId: number) {
   const session = await getSession();
@@ -82,7 +83,9 @@ export default async function ProductDetail({
         <span className="font-semibold text-xl">
           {formatToWon(product.price)}원
         </span>
-        {isOwner ? <DeleteBtn productId={id} /> : null}
+        {isOwner ? (
+          <DeleteBtn productId={id} deleteFunction={deleteProduct} />
+        ) : null}
         {isOwner ? (
           <Link
             className="bg-orange-500 px-5 py-2.5 rounded-md text-white font-semibold"

@@ -23,11 +23,12 @@ export default function CustomAlert({
   // 수정, 삭제 메소드 실행
   const handleConfirm = async () => {
     const result = await onConfirm();
-    if (result === 1) {
+    console.log("custom alert:", result);
+    if (result) {
       // 삭제, 수정 성공
       setContent(`${type === "D" ? "삭제" : "수정"}되었습니다.`);
       setIsFinished(true);
-    } else if (result === 0) {
+    } else {
       // 삭제, 수정 실패
       setContent(
         `${
@@ -40,7 +41,7 @@ export default function CustomAlert({
 
   // 수정, 삭제 후 products 페이지로 이동
   const handleMoveProducts = () => {
-    router.push("/products");
+    router.replace("/products");
   };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-25 flex justify-center items-center ">
