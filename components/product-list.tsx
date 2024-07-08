@@ -23,12 +23,19 @@ interface ProductListProps {
 export default function ProductList({ initialProducts }: ProductListProps) {
   const [products, setProducts] = useState(initialProducts);
   const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [isLastPage, setIsLastPage] = useState(false);
   const onLoadMoreProductsClick = async () => {
     setIsLoading(true);
     // getMoreProducts: Server Action을 이용한 pagenation
-    const newProducts = await getMoreProducts(1);
-    // ...spread operation을 사용하면 array의 elements만 풀어서 가져옴
-    setProducts((prev) => [...prev, ...newProducts]);
+    const newProducts = await getMoreProducts(page + 1);
+    if (newProducts.length !== 0) {
+      setPage((prev) => prev + 1);
+      // ...spread operation을 사용하면 array의 elements만 풀어서 가져옴
+      setProducts((prev) => [...prev, ...newProducts]);
+    } else {
+      setIsLastPage(true);
+    }
     setIsLoading(false);
   };
   return (
@@ -38,14 +45,18 @@ export default function ProductList({ initialProducts }: ProductListProps) {
         // 하나하나 개별적으로 하지 않고 스프레드를 사용하여 한번에 props로 보낼 수 있음
         <ListProduct key={product.id} {...product} />
       ))}
-      <button
-        onClick={onLoadMoreProductsClick}
-        // 로딩 중일 때 true가 되어 disabled됨
-        disabled={isLoading}
-        className="text-sm font-semibold bg-orange-500 w-fit mx-auto px-3 py-2 rounded-md hover:opacity-90 active:scale-95"
-      >
-        {isLoading ? "로딩 중" : "Load more"}
-      </button>
+      {isLastPage ? (
+        "No more items"
+      ) : (
+        <button
+          onClick={onLoadMoreProductsClick}
+          // 로딩 중일 때 true가 되어 disabled됨
+          disabled={isLoading}
+          className="text-sm font-semibold bg-orange-500 w-fit mx-auto px-3 py-2 rounded-md hover:opacity-90 active:scale-95"
+        >
+          {isLoading ? "로딩 중" : "Load more"}
+        </button>
+      )}
     </div>
   );
 }
