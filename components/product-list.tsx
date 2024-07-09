@@ -2,7 +2,7 @@
 
 import { InitialProducts } from "@/app/(tabs)/products/page";
 import ListProduct from "./list-product";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getMoreProducts } from "@/app/(tabs)/products/actions";
 
 /* interface ProductListProps {
@@ -25,19 +25,50 @@ export default function ProductList({ initialProducts }: ProductListProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [isLastPage, setIsLastPage] = useState(false);
-  const onLoadMoreProductsClick = async () => {
-    setIsLoading(true);
-    // getMoreProducts: Server Action을 이용한 pagenation
-    const newProducts = await getMoreProducts(page + 1);
-    if (newProducts.length !== 0) {
-      setPage((prev) => prev + 1);
-      // ...spread operation을 사용하면 array의 elements만 풀어서 가져옴
-      setProducts((prev) => [...prev, ...newProducts]);
-    } else {
-      setIsLastPage(true);
+  // <HTMLSpanElement>: reference를 span에 저장하겠다고 TypeScript에 알려주는 것
+  const trigger = useRef<HTMLSpanElement>(null);
+  // page value가 변경되면 내부 function이 실행됨
+  useEffect(() => {
+    // Creating the Observer: trigger를 obsever함
+    const observer = new IntersectionObserver(
+      async (
+        entries: IntersectionObserverEntry[],
+        observer: IntersectionObserver
+      ) =>
+        // console.log(entries[0].isIntersecting)
+        {
+          const element = entries[0];
+          // 아래 TypeScript Error를 없애기 위해 trigger.current가 존재하는지 확인
+          if (element.isIntersecting && trigger.current) {
+            // trigger.current가 null일 수도 있어서 TypeScript Error 발생
+            observer.unobserve(trigger.current);
+            setIsLoading(true);
+            // getMoreProducts: Server Action을 이용한 pagenation
+            const newProducts = await getMoreProducts(page + 1);
+            if (newProducts.length !== 0) {
+              setPage((prev) => prev + 1);
+              // ...spread operation을 사용하면 array의 elements만 풀어서 가져옴
+              setProducts((prev) => [...prev, ...newProducts]);
+            } else {
+              setIsLastPage(true);
+            }
+            setIsLoading(false);
+          }
+        },
+      {
+        // threshold: 1.0: trigger가 100% 표시될 때까지 기다린다는 뜻
+        threshold: 1.0,
+        rootMargin: "0px 0px -100px 0px",
+      }
+    );
+    if (trigger.current) {
+      observer.observe(trigger.current);
     }
-    setIsLoading(false);
-  };
+    // Cleanup Function: user가 page를 떠날 때 호출됨, Component가 사라질 때(Unmount될 때)
+    return () => {
+      observer.disconnect();
+    };
+  }, [page]);
   return (
     <div className="p-5 flex flex-col gap-5">
       {products.map((product) => (
@@ -45,18 +76,18 @@ export default function ProductList({ initialProducts }: ProductListProps) {
         // 하나하나 개별적으로 하지 않고 스프레드를 사용하여 한번에 props로 보낼 수 있음
         <ListProduct key={product.id} {...product} />
       ))}
-      {isLastPage ? (
-        "No more items"
-      ) : (
-        <button
-          onClick={onLoadMoreProductsClick}
-          // 로딩 중일 때 true가 되어 disabled됨
-          disabled={isLoading}
-          className="text-sm font-semibold bg-orange-500 w-fit mx-auto px-3 py-2 rounded-md hover:opacity-90 active:scale-95"
+      {/* ref={trigger}: VanillaJS에서 id를 주고 span을 가져오는 코드와 유사하게 사용됨 */}
+      {!isLastPage ? (
+        <span
+          ref={trigger}
+          style={{
+            marginTop: `${page + 1 * 300}vh`,
+          }}
+          className=" mb-96 text-sm font-semibold bg-orange-500 w-fit mx-auto px-3 py-2 rounded-md hover:opacity-90 active:scale-95"
         >
           {isLoading ? "로딩 중" : "Load more"}
-        </button>
-      )}
+        </span>
+      ) : null}
     </div>
   );
 }
