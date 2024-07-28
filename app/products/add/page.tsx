@@ -5,27 +5,43 @@ import Input from "@/components/input";
 import { PhotoIcon } from "@heroicons/react/24/solid";
 import React, { useState } from "react";
 import { uploadProduct } from "./actions";
+import { z } from "zod";
+
+const MAX_SIZE = 2 * 1024 * 1024;
+
+const fileSchema = z.object({
+  type: z.string().refine((value) => value.includes("image"), {
+    message: "이미지 파일만 업로드 가능합니다.",
+  }),
+  size: z.number().max(MAX_SIZE, {
+    message: "2MB 이하의 파일만 업로드 가능합니다.",
+  }),
+});
 
 export default function AddProduct() {
   const [preview, setPreview] = useState("");
   const onImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const MAX_SIZE = 2 * 1024 * 1024;
     const {
       target: { files },
     } = event;
     // TypeScript Error: files가 null일 수도 있어서 발생
     // null일 경우 아무 것도 하지 않는 것을 return하여 에러 해결
-    if (!files) {
+    // files.length == 0: 파일을 한번 열은 후에 다시 사진 첨부를 하고 이미지를 선택하지 않고 취소하는 경우 에러 발생 -> 이를 막기 위해 파일 사이즈가 0일 때도 return하여 해결
+    if (!files || files.length == 0) {
+      setPreview("");
       return;
     }
     const file = files[0];
-    // file의 타입이 이미지가 맞는지 확인
-    if (!file.type.startsWith("image/")) {
-      return;
+
+    const result = fileSchema.safeParse(file);
+    if (!result.success) {
+      alert(
+        result.error.flatten().fieldErrors.size ||
+          result.error.flatten().fieldErrors.type
+      );
+      return result.error.flatten();
     }
-    if (file.size > MAX_SIZE) {
-      return;
-    }
+
     // URL생성, 브라우저에서만 볼 수 있고 다른 사람은 볼 수 없는 url을 생성함
     // 이 URL은 파일이 업로드된 메모리를 참조함
     const url = URL.createObjectURL(file);
@@ -55,13 +71,14 @@ export default function AddProduct() {
             </>
           ) : null}
         </label>
-        <input
+        <Input
           onChange={onImageChange}
           type="file"
           id="photo"
           name="photo"
           accept="image/*"
           className="hidden"
+          //   errors={}
         />
         <Input name="title" required placeholder="제목" type="text" />
         <Input name="price" required placeholder="가격" type="number" />
