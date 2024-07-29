@@ -22,7 +22,10 @@ const fileSchema = z.object({
 
 export default function AddProduct() {
   const [preview, setPreview] = useState("");
-  const onImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onImageChange = (
+    _: any,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const {
       target: { files },
     } = event;
@@ -37,10 +40,10 @@ export default function AddProduct() {
 
     const result = fileSchema.safeParse(file);
     if (!result.success) {
-      alert(
-        result.error.flatten().fieldErrors.size ||
-          result.error.flatten().fieldErrors.type
-      );
+      //   alert(
+      //     result.error.flatten().fieldErrors.size ||
+      //       result.error.flatten().fieldErrors.type
+      //   );
       return result.error.flatten();
     }
 
@@ -51,6 +54,10 @@ export default function AddProduct() {
   };
   // useFormState(react/dom)를 사용하여 server aciton(actions.ts)에서 success, error 정보를 받아와 state에 저장, 이를 활용하여 에러 발생 시 폼에 어디서 어떤 에러가 발생했는지 알려줄 수 있음
   const [state, action] = useFormState(uploadProduct, null);
+  const [imageChangeState, imageChangeAction] = useFormState(
+    onImageChange,
+    null
+  );
   return (
     <div>
       {/* action을 이용하여 server action과 연결 */}
@@ -77,13 +84,16 @@ export default function AddProduct() {
           ) : null}
         </label>
         <Input
-          onChange={onImageChange}
+          onChange={imageChangeAction}
           type="file"
           id="photo"
           name="photo"
           accept="image/*"
           className="hidden"
-          //   errors={}
+          errors={
+            imageChangeState?.fieldErrors.size ||
+            imageChangeState?.fieldErrors.type
+          }
         />
         <Input
           name="title"
