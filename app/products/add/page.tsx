@@ -6,6 +6,8 @@ import { PhotoIcon } from "@heroicons/react/24/solid";
 import React, { useState } from "react";
 import { uploadProduct } from "./actions";
 import { z } from "zod";
+import { useFormState } from "react-dom";
+import { stat } from "fs";
 
 const MAX_SIZE = 2 * 1024 * 1024;
 
@@ -47,11 +49,13 @@ export default function AddProduct() {
     const url = URL.createObjectURL(file);
     setPreview(url);
   };
+  // useFormState(react/dom)를 사용하여 server aciton(actions.ts)에서 success, error 정보를 받아와 state에 저장, 이를 활용하여 에러 발생 시 폼에 어디서 어떤 에러가 발생했는지 알려줄 수 있음
+  const [state, action] = useFormState(uploadProduct, null);
   return (
     <div>
       {/* action을 이용하여 server action과 연결 */}
       {/* flex, flex-col, gap-5를 이용하여 예쁘게 정렬 */}
-      <form action={uploadProduct} className="p-5 flex flex-col gap-5">
+      <form action={action} className="p-5 flex flex-col gap-5">
         {/* htmlFor로 input과 연결 */}
         {/* input의 classname에 hidden을 부여하여 숨기기 */}
         <label
@@ -67,6 +71,7 @@ export default function AddProduct() {
               <PhotoIcon className="w-20" />
               <div className="text-neutral-400 text-sm">
                 사진을 추가해주세요.
+                {state?.fieldErrors.photo}
               </div>
             </>
           ) : null}
@@ -80,13 +85,26 @@ export default function AddProduct() {
           className="hidden"
           //   errors={}
         />
-        <Input name="title" required placeholder="제목" type="text" />
-        <Input name="price" required placeholder="가격" type="number" />
+        <Input
+          name="title"
+          required
+          placeholder="제목"
+          type="text"
+          errors={state?.fieldErrors.title}
+        />
+        <Input
+          name="price"
+          required
+          placeholder="가격"
+          type="number"
+          errors={state?.fieldErrors.price}
+        />
         <Input
           name="description"
           required
           placeholder="자세한 설명"
           type="text"
+          errors={state?.fieldErrors.description}
         />
         <Button text="작성 완료" />
       </form>
