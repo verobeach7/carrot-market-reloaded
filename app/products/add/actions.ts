@@ -65,7 +65,7 @@ export async function uploadProduct(_: any, formData: FormData) {
         },
       });
       console.log(product);
-      // redirect(`/products/${product.id}`);
+      redirect(`/products/${product.id}`);
       //   redirect("/products");
     }
   }

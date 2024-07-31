@@ -34,27 +34,26 @@ export default function ProductList({ initialProducts }: ProductListProps) {
       async (
         entries: IntersectionObserverEntry[],
         observer: IntersectionObserver
-      ) =>
-        // console.log(entries[0].isIntersecting)
-        {
-          const element = entries[0];
-          // 아래 TypeScript Error를 없애기 위해 trigger.current가 존재하는지 확인
-          if (element.isIntersecting && trigger.current) {
-            // trigger.current가 null일 수도 있어서 TypeScript Error 발생
-            observer.unobserve(trigger.current);
-            setIsLoading(true);
-            // getMoreProducts: Server Action을 이용한 pagenation
-            const newProducts = await getMoreProducts(page + 1);
-            if (newProducts.length !== 0) {
-              // ...spread operation을 사용하면 array의 elements만 풀어서 가져옴
-              setProducts((prev) => [...prev, ...newProducts]);
-              setPage((prev) => prev + 1);
-            } else {
-              setIsLastPage(true);
-            }
-            setIsLoading(false);
+      ) => {
+        console.log(entries[0].isIntersecting);
+        const element = entries[0];
+        // 아래 TypeScript Error를 없애기 위해 trigger.current가 존재하는지 확인
+        if (element.isIntersecting && trigger.current) {
+          // trigger.current가 null일 수도 있어서 TypeScript Error 발생
+          observer.unobserve(trigger.current);
+          setIsLoading(true);
+          // getMoreProducts: Server Action을 이용한 pagenation
+          const newProducts = await getMoreProducts(page + 1);
+          if (newProducts.length !== 0) {
+            // ...spread operation을 사용하면 array의 elements만 풀어서 가져옴
+            setProducts((prev) => [...prev, ...newProducts]);
+            setPage((prev) => prev + 1);
+          } else {
+            setIsLastPage(true);
           }
-        },
+          setIsLoading(false);
+        }
+      },
       {
         // threshold: 1.0: trigger가 100% 표시될 때까지 기다린다는 뜻
         threshold: 1.0,
@@ -70,7 +69,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
     };
   }, [page]);
   return (
-    <div className="p-5 flex flex-col gap-5">
+    <div className="p-5 flex flex-col gap-5 ">
       {products.map((product) => (
         // <ListProduct id={product.id} title={product.title} />
         // 하나하나 개별적으로 하지 않고 스프레드를 사용하여 한번에 props로 보낼 수 있음
