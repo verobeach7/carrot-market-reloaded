@@ -1,4 +1,4 @@
-import { InputHTMLAttributes } from "react";
+import { ForwardedRef, InputHTMLAttributes, forwardRef } from "react";
 
 interface InputProps {
   // name도 InputHTMLAttributes에 포함되어 있지만 남겨둠
@@ -7,17 +7,21 @@ interface InputProps {
   errors?: string[];
 }
 
-export default function Input({
-  name,
-  errors = [],
-  // name과 errors를 제외한 나머저 input props를 한꺼번에 받아올 수 있음
-  // Spread 연산자: 이름은 rest가 아닌 무엇이든지 상관없음
-  ...rest
-}: InputProps & InputHTMLAttributes<HTMLInputElement>) {
+const _Input = (
+  {
+    name,
+    errors = [],
+    // name과 errors를 제외한 나머저 input props를 한꺼번에 받아올 수 있음
+    // Spread 연산자: 이름은 rest가 아닌 무엇이든지 상관없음
+    ...rest
+  }: InputProps & InputHTMLAttributes<HTMLInputElement>, // props
+  ref: ForwardedRef<HTMLInputElement> // forwardedRef
+) => {
   // console.log(rest);
   return (
     <div className="flex flex-col gap-2">
       <input
+        ref={ref}
         name={name}
         className="bg-transparent rounded-md w-full h-10 focus:outline-none ring-1 focus:ring-4 transition ring-neutral-200 focus:ring-orange-500 border-none placeholder:text-neutral-400"
         {...rest}
@@ -29,4 +33,6 @@ export default function Input({
       ))}
     </div>
   );
-}
+};
+
+export default forwardRef(_Input);

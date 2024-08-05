@@ -69,7 +69,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
     };
   }, [page]);
   return (
-    <div className="p-5 flex flex-col gap-5 ">
+    <div className="p-5 flex flex-col gap-5 h-[10000px]">
       {products.map((product) => (
         // <ListProduct id={product.id} title={product.title} />
         // 하나하나 개별적으로 하지 않고 스프레드를 사용하여 한번에 props로 보낼 수 있음
