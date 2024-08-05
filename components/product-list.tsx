@@ -1,9 +1,9 @@
 "use client";
 
-import { InitialProducts } from "@/app/(tabs)/products/page";
+import { InitialProducts } from "@/app/(tabs)/home/page";
 import ListProduct from "./list-product";
 import { useEffect, useRef, useState } from "react";
-import { getMoreProducts } from "@/app/(tabs)/products/actions";
+import { getMoreProducts } from "@/app/(tabs)/home/actions";
 
 /* interface ProductListProps {
   initialProducts: {
@@ -69,7 +69,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
     };
   }, [page]);
   return (
-    <div className="p-5 flex flex-col gap-5 h-[10000px]">
+    <div className="p-5 flex flex-col gap-5">
       {products.map((product) => (
         // <ListProduct id={product.id} title={product.title} />
         // 하나하나 개별적으로 하지 않고 스프레드를 사용하여 한번에 props로 보낼 수 있음
