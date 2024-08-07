@@ -7,6 +7,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import DeleteBtn from "@/components/delete-btn";
 import deleteProduct from "./actions";
+import { getProduct } from "@/lib/get-product";
 
 async function getIsOwner(userId: number) {
   const session = await getSession();
@@ -17,23 +18,6 @@ async function getIsOwner(userId: number) {
   }
   // 로그인되어 있지 않다면 false 반환
   return false;
-}
-
-async function getProduct(id: number) {
-  const product = await db.product.findUnique({
-    where: {
-      id,
-    },
-    include: {
-      user: {
-        select: {
-          username: true,
-          avatar: true,
-        },
-      },
-    },
-  });
-  return product;
 }
 
 export default async function ProductDetail({
