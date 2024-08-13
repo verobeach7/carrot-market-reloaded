@@ -1,6 +1,7 @@
 import db from "./db";
 
-export async function getProduct(id: number) {
+export default async function getProduct(id: number) {
+  console.log("product");
   const product = await db.product.findUnique({
     where: {
       id,
