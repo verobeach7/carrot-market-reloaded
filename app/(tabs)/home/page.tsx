@@ -2,6 +2,7 @@ import ProductList from "@/components/product-list";
 import db from "@/lib/db";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { Prisma } from "@prisma/client";
+import { unstable_cache as nextCache } from "next/cache";
 import Link from "next/link";
 
 /* // loading.tsx 확인을 위한 작업
@@ -10,7 +11,11 @@ async function getInitialProducts() {
     setTimeout(resolve, 10000);
   });
 } */
+
+const getCachedProducts = nextCache(getInitialProducts, ["home-products"]);
+
 async function getInitialProducts() {
+  console.log("hit"); // 새롭게 DB와 소통하여 데이터를 받아오는지 확인할 수 있음
   const products = await db.product.findMany({
     select: {
       title: true,
@@ -20,7 +25,7 @@ async function getInitialProducts() {
       id: true,
     },
     // take: 몇 개의 데이터를 가져올지 지정할 수 있음
-    take: 1,
+    // take: 1,
     orderBy: {
       // asc: 오름차순 - 오래된 것부터 보임, desc: 내림차순 - 최근 것부터 보임
       created_at: "desc",
@@ -34,8 +39,12 @@ export type InitialProducts = Prisma.PromiseReturnType<
   typeof getInitialProducts
 >;
 
+export const metadata = {
+  title: "Home",
+};
+
 export default async function Products() {
-  const initialProducts = await getInitialProducts();
+  const initialProducts = await getCachedProducts();
   return (
     <div>
       <ProductList initialProducts={initialProducts} />
