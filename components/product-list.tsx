@@ -57,7 +57,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
       {
         // threshold: 1.0: trigger가 100% 표시될 때까지 기다린다는 뜻
         threshold: 1.0,
-        rootMargin: "0px 0px -100px 0px",
+        rootMargin: "0px 0px -100px 0px", // 나중에 로딩이 자동으로 안 될 시 이 부분 확인!!!!!!!!!!!!!!!!!!
       }
     );
     if (trigger.current) {
