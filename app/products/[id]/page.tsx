@@ -21,20 +21,11 @@ async function getIsOwner(userId: number) {
   return false;
 }
 
-async function fetchProduct(id: number) {
-  fetch("https://api.com", {
-    next: {
-      revalidate: 60,
-      tags: ["hello"],
-    },
-  });
-}
-
 const getCachedProduct = nextCache(getProduct, ["product-detail"], {
   tags: ["product-detail", "xxxx"],
 });
 
-export async function getProductTitle(id: number) {
+async function getProductTitle(id: number) {
   console.log("title");
   const product = await db.product.findUnique({
     where: {
