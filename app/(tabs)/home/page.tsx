@@ -45,6 +45,12 @@ export const metadata = {
   title: "Home",
 };
 
+/* // Next.JS는 따로 설정하지 않으면 기본값으로 "auto"를 가짐
+export const dynamic = "force-dynamic"; */
+
+// Next.JS는 기본값으로 false를 가짐. 0 또는 초단위 정수 설정 가능
+export const revalidate = 60;
+
 export default async function Products() {
   const initialProducts = await getInitialProducts();
   const revalidate = async () => {
