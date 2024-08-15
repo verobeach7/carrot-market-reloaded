@@ -131,6 +131,9 @@ export default async function ProductDetail({
   );
 }
 
+// 반드시 dynamicParams 이름을 사용해야 함. 예약어.
+export const dynamicParams = false;
+
 /* 신중하게 사용해야 함. 너무 많은 자료가 있는 경우 이를 미리 다 렌더링하는 것은 앱을 느려지게 하거나 멈추게 할 수 있음. 그러므로 소수의 페이지를 미리 렌더링 하면 좋은 경우에 사용 추천 */
 // 반드시 이름이 generateStaticParams여야 함
 // ProductDetail함수의 params로 받을 가능성이 있는 parameter objects 리스트를 return해야 함
