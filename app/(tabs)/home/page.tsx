@@ -46,8 +46,10 @@ export const metadata = {
 };
 
 /* // Next.JS는 따로 설정하지 않으면 기본값으로 "auto"를 가짐
+// 반드시 이름이 dynamic이어야 함
 export const dynamic = "force-dynamic"; */
 
+// 반드시 이름이 revalidate여야 함
 // Next.JS는 기본값으로 false를 가짐. 0 또는 초단위 정수 설정 가능
 export const revalidate = 60;
 

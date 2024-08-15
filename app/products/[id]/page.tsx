@@ -11,12 +11,14 @@ import getProduct from "@/lib/get-product";
 import { unstable_cache as nextCache, revalidateTag } from "next/cache";
 
 async function getIsOwner(userId: number) {
-  const session = await getSession();
+  // cookies를 사용하면 이 페이지를 미리 render할 수 없음
+  /* const session = await getSession();
   // 로그인되어 있다면 로그인id와 product의 userId가 같은지 확인(소유자 확인)
   if (session.id) {
     // 소유자이면 true, 소유자가 아니면 false 반환
     return session.id === userId;
-  }
+  } */
+
   // 로그인되어 있지 않다면 false 반환
   return false;
 }
@@ -42,6 +44,7 @@ const getCachedProductTitle = nextCache(getProductTitle, ["product-title"], {
   tags: ["product-title", "xxxx"],
 });
 
+// 반드시 이름이 generateMetadata여야 함. 예약어
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const product = await getCachedProductTitle(Number(params.id));
   return {
@@ -125,5 +128,26 @@ export default async function ProductDetail({
         )}
       </div>
     </div>
+  );
+}
+
+/* 신중하게 사용해야 함. 너무 많은 자료가 있는 경우 이를 미리 다 렌더링하는 것은 앱을 느려지게 하거나 멈추게 할 수 있음. 그러므로 소수의 페이지를 미리 렌더링 하면 좋은 경우에 사용 추천 */
+// 반드시 이름이 generateStaticParams여야 함
+// ProductDetail함수의 params로 받을 가능성이 있는 parameter objects 리스트를 return해야 함
+export async function generateStaticParams() {
+  const products = await db.product.findMany({
+    select: {
+      id: true,
+    },
+  });
+  // 괄호를 사용하는 이유: javascript가 object를 return하려는 것을 알 수 있게 해줘야함
+  // 괄호가 없다면 아무 것도 반환하지 않고 연산만 하는 것
+  return products.map(
+    (product) => ({ id: product.id + "" })
+    /* {
+      return {
+        id: product.id + "",
+      };
+    } */
   );
 }
