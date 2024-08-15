@@ -1,6 +1,7 @@
 import db from "@/lib/db";
 import getSession from "@/lib/session";
 import { notFound, redirect } from "next/navigation";
+import { Suspense } from "react";
 
 async function getUser() {
   const session = await getSession(); // 브라우저의 cookie를 가져옴
@@ -17,9 +18,14 @@ async function getUser() {
   notFound();
 }
 
+async function Username() {
+  await new Promise((resolve) => setTimeout(resolve, 10000));
+  const user = await getUser();
+  return <h1>Welcome! {user?.username}</h1>;
+}
+
 // getUser는 Promise이기 때문에 async-await 반드시 필요
 export default async function Profile() {
-  const user = await getUser();
   // inline server action
   const logOut = async () => {
     "use server";
@@ -29,7 +35,9 @@ export default async function Profile() {
   };
   return (
     <div>
-      <h1>Welcome! {user?.username}</h1>
+      <Suspense fallback={"Welcome!"}>
+        <Username />
+      </Suspense>
       {/* <button onClick={function}>Log out</button> */}
       {/* onClick을 이용하기 위해서는 client component로 만들어야 함 */}
       {/* client component는 최대한 피하는 방향으로 개발해야 함 */}
