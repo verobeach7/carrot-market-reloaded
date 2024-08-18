@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import DeleteBtn from "@/components/delete-btn";
-import deleteProduct from "./actions";
+import deleteProduct from "./edit/actions";
 import getProduct from "@/lib/get-product";
 import { unstable_cache as nextCache, revalidateTag } from "next/cache";
 
