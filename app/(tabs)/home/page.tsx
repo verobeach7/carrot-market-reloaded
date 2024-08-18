@@ -51,7 +51,7 @@ export const dynamic = "force-dynamic"; */
 
 // 반드시 이름이 revalidate여야 함
 // Next.JS는 기본값으로 false를 가짐. 0 또는 초단위 정수 설정 가능
-export const revalidate = 60;
+// export const revalidate = 60;
 
 export default async function Products() {
   const initialProducts = await getInitialProducts();

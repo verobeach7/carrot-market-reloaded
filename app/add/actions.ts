@@ -4,6 +4,7 @@ import db from "@/lib/db";
 import getSession from "@/lib/session";
 import { redirect } from "next/navigation";
 import { productSchema } from "./schema";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 // 첫번째 argument는 formState임
 export async function uploadProduct(formData: FormData) {
@@ -39,6 +40,8 @@ export async function uploadProduct(formData: FormData) {
         },
       });
       console.log(product);
+      revalidatePath("/home");
+      revalidateTag("product-detail");
       redirect(`/products/${product.id}`);
       //   redirect("/products");
     }
