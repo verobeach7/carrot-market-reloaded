@@ -7,7 +7,6 @@ import CustomAlert from "./custom-alert";
 
 type DeleteBtnProps = {
   productId: number;
-  deleteFunction: Function;
 };
 
 export default function DeleteBtn({ productId }: DeleteBtnProps) {

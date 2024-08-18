@@ -10,6 +10,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { z } from "zod";
+import DeleteBtn from "./delete-btn";
+import deleteProduct from "@/app/products/[id]/edit/actions";
 
 const MAX_SIZE = 2 * 1024 * 1024;
 
@@ -193,6 +195,7 @@ export default function EditForm({
           errors={[errors.description?.message ?? ""]}
         />
         <Button text="작성 완료" />
+        <DeleteBtn productId={id} />
       </form>
     </div>
   );

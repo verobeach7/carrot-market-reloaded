@@ -61,13 +61,25 @@ export default async function deleteProduct(productId: number) {
       id: productId,
       userId,
     },
+    select: {
+      photo: true,
+    },
   });
+  const photoId = isDeleted.photo.split(
+    "https://imagedelivery.net/92PVTtiVyG2e5LoQeQDf_w/"
+  )[1];
+  await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/images/v1/${photoId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
-  if (!isDeleted) {
-    return false;
-  }
   revalidatePath("/home");
   revalidateTag("product-detail");
-
-  return true;
+  redirect(`/home`);
 }
