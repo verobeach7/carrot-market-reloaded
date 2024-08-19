@@ -5,13 +5,13 @@ import Input from "./input";
 import Button from "./button";
 import { PhotoIcon } from "@heroicons/react/24/solid";
 import { useFormState } from "react-dom";
-import { getUploadUrl, uploadProduct } from "@/app/add/actions";
+import { getUploadUrl } from "@/app/add/actions";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import DeleteBtn from "./delete-btn";
-import deleteProduct from "@/app/products/[id]/edit/actions";
+import { deletePhoto, editProduct } from "@/app/products/[id]/edit/actions";
 
 const MAX_SIZE = 2 * 1024 * 1024;
 
@@ -92,23 +92,32 @@ export default function EditForm({
   // 즉, Validation을 통과하지 못하면 호출되지 않음
   const onSubmit = handleSubmit(async (data: ProductType) => {
     // data는 더이상 file을 가지고 있지 않기 때문에 별도로 file을 저장해주는 방식을 사용해야 함
-    if (!file) {
+    if (!file && !preview) {
       return; // 오류메시지를 보여주거나 Alert를 띄울 수도 있음
     }
 
-    /* upload image to cloudflare */
-    // 클라우드플레어에는 Form 형식으로 이미지를 업로드해야 함
-    const cloudflareForm = new FormData(); // Form 생성
-    cloudflareForm.append("file", file); // Form에 파일 탑재
-    const response = await fetch(uploadUrl, {
-      method: "POST",
-      body: cloudflareForm,
-    });
-    if (response.status !== 200) {
-      return; // 오류메시지를 보여주거나 Alert를 띄울 수도 있음
+    // edit form에서 이미지 파일이 변경된 경우
+    if (file) {
+      /* upload image to cloudflare */
+      // 클라우드플레어에는 Form 형식으로 이미지를 업로드해야 함
+      const cloudflareForm = new FormData(); // Form 생성
+      cloudflareForm.append("file", file); // Form에 파일 탑재
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        body: cloudflareForm,
+      });
+      if (response.status !== 200) {
+        return; // 오류메시지를 보여주거나 Alert를 띄울 수도 있음
+      }
+      // 이전 photo 삭제
+      const photoId = product.photo.split(
+        "https://imagedelivery.net/92PVTtiVyG2e5LoQeQDf_w/"
+      )[1];
+      await deletePhoto(photoId);
     }
 
     const formData = new FormData();
+    formData.append("id", id + "");
     formData.append("title", data.title);
     formData.append("price", data.price + "");
     formData.append("description", data.description);
@@ -121,7 +130,7 @@ export default function EditForm({
     if(errors){
         // setError("")
     } */
-    return uploadProduct(formData);
+    return editProduct(formData);
   });
 
   const onValid = async () => {
@@ -131,6 +140,15 @@ export default function EditForm({
     onImageChange,
     null
   );
+  useEffect(() => {
+    const photoId = product.photo.split(
+      "https://imagedelivery.net/92PVTtiVyG2e5LoQeQDf_w/"
+    )[1];
+    setValue(
+      "photo",
+      `https://imagedelivery.net/92PVTtiVyG2e5LoQeQDf_w/${photoId}`
+    );
+  }, [product, setValue]);
   // console.log(register("title")); // RHF의 ref를 가지고 있는 object임
   return (
     <div>
@@ -195,8 +213,10 @@ export default function EditForm({
           errors={[errors.description?.message ?? ""]}
         />
         <Button text="작성 완료" />
-        <DeleteBtn productId={id} />
       </form>
+      <div className="p-5 flex flex-col">
+        <DeleteBtn productId={id} />
+      </div>
     </div>
   );
 }

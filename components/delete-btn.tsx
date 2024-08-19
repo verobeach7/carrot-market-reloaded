@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import deleteProduct from "../app/products/[id]/edit/actions";
+import { deleteProduct } from "../app/products/[id]/edit/actions";
 import { useCallback, useState } from "react";
 import CustomAlert from "./custom-alert";
 
@@ -10,6 +10,7 @@ type DeleteBtnProps = {
 };
 
 export default function DeleteBtn({ productId }: DeleteBtnProps) {
+  console.log("here");
   // "use client"에서는 useRouter 사용
   const router = useRouter();
 

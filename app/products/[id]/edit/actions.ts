@@ -6,6 +6,19 @@ import getSession from "@/lib/session";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
+export async function deletePhoto(photoId: string) {
+  await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/images/v1/${photoId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}
+
 export async function editProduct(formData: FormData) {
   const data = {
     id: formData.get("id"),
@@ -48,7 +61,7 @@ export async function editProduct(formData: FormData) {
   }
 }
 
-export default async function deleteProduct(productId: number) {
+export async function deleteProduct(productId: number) {
   const session = await getSession();
   const userId = session.id;
 
