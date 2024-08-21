@@ -76,14 +76,14 @@ export default function ProductList({ initialProducts }: ProductListProps) {
         <ListProduct key={product.id} {...product} />
       ))}
       {/* ref={trigger}: VanillaJS에서 id를 주고 span을 가져오는 코드와 유사하게 사용됨 */}
-      {/* {!isLastPage ? (
+      {!isLastPage ? (
         <span
           ref={trigger}
           className="text-sm font-semibold bg-orange-500 w-fit mx-auto px-3 py-2 rounded-md hover:opacity-90 active:scale-95"
         >
-          {isLoading ? "로딩 중" : "Load more"}
+          {isLoading ? "로딩 중" : "더보기"}
         </span>
-      ) : null} */}
+      ) : null}
     </div>
   );
 }

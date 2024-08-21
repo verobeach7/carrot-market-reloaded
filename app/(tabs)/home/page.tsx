@@ -55,16 +55,16 @@ export const dynamic = "force-dynamic"; */
 
 export default async function Products() {
   const initialProducts = await getInitialProducts();
-  const revalidate = async () => {
+  /* const revalidate = async () => {
     "use server";
     revalidatePath("/home");
-  };
+  }; */
   return (
     <div>
       <ProductList initialProducts={initialProducts} />
-      <form action={revalidate}>
+      {/* <form action={revalidate}>
         <button>Revalidate</button>
-      </form>
+      </form> */}
       <Link
         href="/add"
         className="bg-orange-500 flex items-center justify-center rounded-full size-16 fixed bottom-24 right-8 text-white transition-colors hover:bg-orange-400"
