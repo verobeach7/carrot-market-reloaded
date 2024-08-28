@@ -3,7 +3,7 @@ import getSession from "@/lib/session";
 import { formatToTimeAgo } from "@/lib/utils";
 import { EyeIcon, HandThumbUpIcon } from "@heroicons/react/24/solid";
 import { HandThumbUpIcon as OutlineHandThumbUpIcon } from "@heroicons/react/24/outline";
-import { revalidatePath } from "next/cache";
+import { unstable_cache as nextCache, revalidateTag } from "next/cache";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
@@ -26,9 +26,11 @@ async function getPost(id: number) {
           },
         },
         _count: {
+          // 자신(Post)을 가리키고 있는 reverse relationship 개수를 알 수 있음. 즉, 좋아요와 댓글의 개수를 알 수 있음
           select: {
             comments: true,
-            likes: true,
+            // likes count는 별도로 분리하여 다른 곳에서 작업해야하기 때문에 삭제
+            // likes: true,
           },
         },
       },
@@ -39,17 +41,48 @@ async function getPost(id: number) {
   }
 }
 
-async function getIsLiked(postId: number) {
-  const session = await getSession();
-  const like = await db.like.findUnique({
+async function getCachedPost(postId: number) {
+  const cachedOperation = nextCache(getPost, ["post-detail"], {
+    tags: [`post-detail-${postId}`],
+    revalidate: 60, // 조회수가 실시간은 아니지만 계속해서 반영되는 것처럼 보이게 만들 수 있음
+  });
+  return cachedOperation(postId);
+}
+
+// isLiked뿐만 아니라 likes count도 필요하므로 함수명 변경
+async function getLikeStatus(postId: number, userId: number) {
+  // nextCache 내부에서 getSession을 이용할 때 cookies를 사용하는데 둘이 함께 사용 불가능함
+  // const session = await getSession();
+  const isLiked = await db.like.findUnique({
     where: {
       id: {
         postId,
-        userId: session.id!,
+        userId,
       },
     },
   });
-  return Boolean(like);
+  // db의 like collection에서 해당글의 postId에 해당하는 데이터가 몇 개 있는지를 카운트해줌
+  const likeCount = await db.like.count({
+    where: {
+      postId,
+    },
+  });
+  return { likeCount, isLiked: Boolean(isLiked) };
+}
+
+/* const getCachedLikeStatus = nextCache(getLikeStatus, ["post-like-status"], {
+  tags: ["like-status"],
+}); */
+
+// 별도의 함수로 포장하여 포장한 함수에서 getSession()을 미리 이용
+// cachedOperation에 postId와 userId를 전달하여 nextCache에서 활용할 수 있도록 함
+async function getCachedLikeStatus(postId: number) {
+  const session = await getSession();
+  const userId = session.id;
+  const cachedOperation = nextCache(getLikeStatus, ["post-like-status"], {
+    tags: [`like-status-${postId}`],
+  });
+  return cachedOperation(postId, userId!); // 반드시 nextCache 함수인 cachedOperation 호출을 return해줘야 함
 }
 
 export default async function PostDetail({
@@ -61,7 +94,7 @@ export default async function PostDetail({
   if (isNaN(id)) {
     return notFound();
   }
-  const post = await getPost(id);
+  const post = await getCachedPost(id);
   if (!post) {
     return notFound();
   }
@@ -69,6 +102,7 @@ export default async function PostDetail({
 
   const likePost = async () => {
     "use server";
+    // await new Promise((r) => setTimeout(r, 5000));
     const session = await getSession();
     try {
       await db.like.create({
@@ -77,7 +111,9 @@ export default async function PostDetail({
           userId: session.id!,
         },
       });
-      revalidatePath(`/posts/${id}`);
+      // 아래와 같이 tag를 사용하면 Cache된 모든 글의 like-status가 한번에 갱신됨.
+      // revalidateTag("like-status");
+      revalidateTag(`like-status-${id}`);
     } catch (e) {}
   };
   const dislikePost = async () => {
@@ -94,11 +130,11 @@ export default async function PostDetail({
           },
         },
       });
-      revalidatePath(`/posts/${id}`);
+      revalidateTag(`like-status-${id}`);
     } catch (e) {}
   };
 
-  const isLiked = await getIsLiked(id);
+  const { likeCount, isLiked } = await getCachedLikeStatus(id);
   return (
     <div className="p-5 text-white">
       <div className="flex items-center gap-2 mb-2">
@@ -137,9 +173,9 @@ export default async function PostDetail({
               <OutlineHandThumbUpIcon className="size-5" />
             )}
             {isLiked ? (
-              <span>{post._count.likes}</span>
+              <span>{likeCount}</span>
             ) : (
-              <span>공감하기 ({post._count.likes})</span>
+              <span>공감하기 ({likeCount})</span>
             )}
           </button>
         </form>
