@@ -19,17 +19,26 @@ export default function LikeButton({
   // useOptimistic을 사용하여 mutation이 완료되기 전에 mutation이 완료된 모습을 예상하여 미리 보여줄 수 있음
   const [state, reducerFn] = useOptimistic(
     { isLiked, likeCount },
-    (previousState, payload: number) => {
+    /* (previousState, payload) => {
       return {
-        isLiked: false,
-        likeCount: payload,
+        isLiked: !previousState.isLiked,
+        likeCount: previousState.isLiked
+          ? previousState.likeCount - 1
+          : previousState.likeCount + 1,
       };
-    }
+    } */
+    // return 생략하는 방법
+    (previousState, payload) => ({
+      isLiked: !previousState.isLiked,
+      likeCount: previousState.isLiked
+        ? previousState.likeCount - 1
+        : previousState.likeCount + 1,
+    })
   );
   // button에 onClick handler를 달아주기 위해 onClick 함수 작성
   const onClick = async () => {
     // mutation이 발생하기 전에 reducerFn을 통해 optimistic response를 가져와 UI에 반영
-    reducerFn(1000000);
+    reducerFn(undefined);
     if (isLiked) {
       // 서버 mutation
       await dislikePost(postId);
