@@ -1,8 +1,8 @@
+import LikeButton from "@/components/like-button";
 import db from "@/lib/db";
 import getSession from "@/lib/session";
 import { formatToTimeAgo } from "@/lib/utils";
-import { EyeIcon, HandThumbUpIcon } from "@heroicons/react/24/solid";
-import { HandThumbUpIcon as OutlineHandThumbUpIcon } from "@heroicons/react/24/outline";
+import { EyeIcon } from "@heroicons/react/24/solid";
 import { unstable_cache as nextCache, revalidateTag } from "next/cache";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -99,40 +99,7 @@ export default async function PostDetail({
     return notFound();
   }
   // console.log(post);
-
-  const likePost = async () => {
-    "use server";
-    // await new Promise((r) => setTimeout(r, 5000));
-    const session = await getSession();
-    try {
-      await db.like.create({
-        data: {
-          postId: id,
-          userId: session.id!,
-        },
-      });
-      // 아래와 같이 tag를 사용하면 Cache된 모든 글의 like-status가 한번에 갱신됨.
-      // revalidateTag("like-status");
-      revalidateTag(`like-status-${id}`);
-    } catch (e) {}
-  };
-  const dislikePost = async () => {
-    "use server";
-    const session = await getSession();
-    try {
-      await db.like.delete({
-        where: {
-          id: {
-            postId: id,
-            // TypeScript Error: session.id는 로그인 한 경우에만 존재하기 때문에 TypeScript가 session.id가 없을 수도 있음을 인식하는 것
-            // 우리는 로그인하지 않은 경우 이 페이지에 올 수 없음을 알고 있기 때문에 !를 붙여 에러를 없앨 수 있음
-            userId: session.id!,
-          },
-        },
-      });
-      revalidateTag(`like-status-${id}`);
-    } catch (e) {}
-  };
+  /* likdPost와 dislikePost는 더이상 아래 Component에서 호출되지 않으므로 별도의 파일로 생성 */
 
   const { likeCount, isLiked } = await getCachedLikeStatus(id);
   return (
@@ -159,26 +126,7 @@ export default async function PostDetail({
           <EyeIcon className="size-5" />
           <span>조회 {post.views}</span>
         </div>
-        <form action={isLiked ? dislikePost : likePost}>
-          <button
-            className={`flex items-center gap-2 text-neutral-400 text-sm border border-neutral-400 rounded-full p-2 transition-colors ${
-              isLiked
-                ? "bg-orange-500 text-white border-orange-500"
-                : "hover:bg-neutral-800"
-            }`}
-          >
-            {isLiked ? (
-              <HandThumbUpIcon className="size-5" />
-            ) : (
-              <OutlineHandThumbUpIcon className="size-5" />
-            )}
-            {isLiked ? (
-              <span>{likeCount}</span>
-            ) : (
-              <span>공감하기 ({likeCount})</span>
-            )}
-          </button>
-        </form>
+        <LikeButton isLiked={isLiked} likeCount={likeCount} postId={id} />
       </div>
     </div>
   );
