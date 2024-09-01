@@ -5,7 +5,6 @@ import {
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { title } from "process";
 
 // loading.tsx파일에 skeleton을 구현하고 확인하기 위해 무한로딩 실행
 async function getPosts() {

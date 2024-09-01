@@ -1,3 +1,4 @@
+import CommentInputBar from "@/components/comment-input-bar";
 import LikeButton from "@/components/like-button";
 import db from "@/lib/db";
 import getSession from "@/lib/session";
@@ -85,6 +86,37 @@ async function getCachedLikeStatus(postId: number) {
   return cachedOperation(postId, userId!); // 반드시 nextCache 함수인 cachedOperation 호출을 return해줘야 함
 }
 
+async function getComments(postId: number) {
+  try {
+    const comments = db.comment.findMany({
+      where: {
+        postId,
+      },
+      include: {
+        user: {
+          select: {
+            username: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+    return comments;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+async function getCachedComments(postId: number) {
+  const session = await getSession();
+  const userId = session.id;
+  const cachedOperation = nextCache(getComments, ["comments"], {
+    tags: [`comments-${postId}`],
+  });
+  return cachedOperation(postId);
+}
+
 export default async function PostDetail({
   params,
 }: {
@@ -102,8 +134,11 @@ export default async function PostDetail({
   /* likdPost와 dislikePost는 더이상 아래 Component에서 호출되지 않으므로 별도의 파일로 생성 */
 
   const { likeCount, isLiked } = await getCachedLikeStatus(id);
+
+  const comments = await getCachedComments(id);
+
   return (
-    <div className="p-5 text-white">
+    <div className="p-5 text-white mb-20">
       <div className="flex items-center gap-2 mb-2">
         <Image
           width={28}
@@ -128,6 +163,33 @@ export default async function PostDetail({
         </div>
         <LikeButton isLiked={isLiked} likeCount={likeCount} postId={id} />
       </div>
+      <div className="bg-neutral-800 mt-5 mb-5 h-1 w-full"></div>
+      <p className="mb-3 text-sm">댓글 {comments?.length}</p>
+      <div className="flex flex-col items-start">
+        {comments?.map((comment) => (
+          <div key={comment.id} className="flex items-start gap-2 mb-3">
+            <Image
+              width={28}
+              height={28}
+              className="size-7 rounded-full mt-2.5"
+              src={comment.user.avatar!}
+              alt={comment.user.username}
+            />
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-semibold">
+                {comment.user.username}
+              </span>
+              <div className="text-xs">
+                <span className="text-neutral-500">
+                  {formatToTimeAgo(comment.created_at.toString())}
+                </span>
+              </div>
+              <div>{comment.payload}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <CommentInputBar postId={id} />
     </div>
   );
 }
