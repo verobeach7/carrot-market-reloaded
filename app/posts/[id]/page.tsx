@@ -184,7 +184,7 @@ export default async function PostDetail({
                   {formatToTimeAgo(comment.created_at.toString())}
                 </span>
               </div>
-              <div>{comment.payload}</div>
+              <div className="whitespace-pre-line">{comment.payload}</div>
             </div>
           </div>
         ))}

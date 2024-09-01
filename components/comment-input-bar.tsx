@@ -23,7 +23,7 @@ export default function CommentInputBar({ postId }: { postId: number }) {
   };
 
   return (
-    <div className="fixed bottom-0 pb-5 w-full mx-auto max-w-screen-md bg-neutral-900 border-neutral-600 border-t pr-5">
+    <div className="fixed bottom-0 pb-5 w-full max-w-screen-md bg-neutral-900 border-neutral-600 border-t pr-8">
       <form
         onSubmit={onSubmit}
         className="*:text-white flex items-center gap-3"
