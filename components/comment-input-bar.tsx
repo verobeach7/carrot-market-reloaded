@@ -4,7 +4,13 @@ import { createComment } from "@/app/posts/[id]/actions";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import React, { FormEvent, useState } from "react";
 
-export default function CommentInputBar({ postId }: { postId: number }) {
+export default function CommentInputBar({
+  postId,
+  handleSubmit,
+}: {
+  postId: number;
+  handleSubmit: (payload: string, postId: number) => Promise<void>;
+}) {
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -17,8 +23,8 @@ export default function CommentInputBar({ postId }: { postId: number }) {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     setLoading(true);
     event.preventDefault();
-    await createComment(comment, postId);
     setComment("");
+    await handleSubmit(comment, postId);
     setLoading(false);
   };
 

@@ -1,10 +1,10 @@
-import CommentInputBar from "@/components/comment-input-bar";
+import { CommentsList } from "@/components/comment-list";
 import LikeButton from "@/components/like-button";
 import db from "@/lib/db";
 import getSession from "@/lib/session";
 import { formatToTimeAgo } from "@/lib/utils";
 import { EyeIcon } from "@heroicons/react/24/solid";
-import { unstable_cache as nextCache, revalidateTag } from "next/cache";
+import { unstable_cache as nextCache } from "next/cache";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
@@ -117,25 +117,43 @@ async function getCachedComments(postId: number) {
   return cachedOperation(postId);
 }
 
+async function getMyProfile() {
+  const session = await getSession();
+  if (!session) return;
+  const myProfile = await db.user.findUnique({
+    where: {
+      id: session.id,
+    },
+    select: {
+      id: true,
+      username: true,
+      avatar: true,
+    },
+  });
+  return myProfile;
+}
+
 export default async function PostDetail({
   params,
 }: {
   params: { id: string };
 }) {
-  const id = Number(params.id);
-  if (isNaN(id)) {
+  const postId = Number(params.id);
+  if (isNaN(postId)) {
     return notFound();
   }
-  const post = await getCachedPost(id);
+  const post = await getCachedPost(postId);
   if (!post) {
     return notFound();
   }
+
+  const me = await getMyProfile();
   // console.log(post);
   /* likdPost와 dislikePost는 더이상 아래 Component에서 호출되지 않으므로 별도의 파일로 생성 */
 
-  const { likeCount, isLiked } = await getCachedLikeStatus(id);
+  const { likeCount, isLiked } = await getCachedLikeStatus(postId);
 
-  const comments = await getCachedComments(id);
+  const comments = await getCachedComments(postId);
 
   return (
     <div className="p-5 text-white mb-20">
@@ -161,35 +179,10 @@ export default async function PostDetail({
           <EyeIcon className="size-5" />
           <span>조회 {post.views}</span>
         </div>
-        <LikeButton isLiked={isLiked} likeCount={likeCount} postId={id} />
+        <LikeButton isLiked={isLiked} likeCount={likeCount} postId={postId} />
       </div>
       <div className="bg-neutral-800 mt-5 mb-5 h-1 w-full"></div>
-      <p className="mb-3 text-sm">댓글 {comments?.length}</p>
-      <div className="flex flex-col items-start">
-        {comments?.map((comment) => (
-          <div key={comment.id} className="flex items-start gap-2 mb-3">
-            <Image
-              width={28}
-              height={28}
-              className="size-7 rounded-full mt-2.5"
-              src={comment.user.avatar!}
-              alt={comment.user.username}
-            />
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold">
-                {comment.user.username}
-              </span>
-              <div className="text-xs">
-                <span className="text-neutral-500">
-                  {formatToTimeAgo(comment.created_at.toString())}
-                </span>
-              </div>
-              <div className="whitespace-pre-line">{comment.payload}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <CommentInputBar postId={id} />
+      <CommentsList comments={comments} postId={postId} me={me!} />
     </div>
   );
 }
