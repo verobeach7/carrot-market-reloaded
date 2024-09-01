@@ -2,7 +2,14 @@
 
 import { formatToTimeAgo } from "@/lib/utils";
 import Image from "next/image";
-import { Suspense, useEffect, useOptimistic, useRef } from "react";
+import {
+  startTransition,
+  Suspense,
+  useEffect,
+  useOptimistic,
+  useRef,
+  useState,
+} from "react";
 import CommentInputBar from "./comment-input-bar";
 import { createComment } from "@/app/posts/[id]/actions";
 
@@ -44,6 +51,7 @@ interface ICommentProps {
 
 export function CommentsList({ comments, postId, me }: ICommentListProps) {
   const endOfCommentsRef = useRef<HTMLDivElement>(null);
+  const [isScrollOnNewComment, setIsScrollOnNewComment] = useState(false);
   const [optimisticComments, reducerFn] = useOptimistic(
     comments!,
     (prevComments, newComment: ICommentProps) => {
@@ -52,7 +60,7 @@ export function CommentsList({ comments, postId, me }: ICommentListProps) {
   );
   const handleSubmit = async (payload: string, postId: number) => {
     const newComment = {
-      id: optimisticComments.length + 1,
+      id: optimisticComments[optimisticComments.length - 1].id + 1,
       payload,
       postId,
       userId: me.id,
@@ -63,15 +71,19 @@ export function CommentsList({ comments, postId, me }: ICommentListProps) {
         avatar: me.avatar,
       },
     };
-    reducerFn(newComment);
+    startTransition(() => {
+      reducerFn(newComment);
+    });
+    setIsScrollOnNewComment(true);
     await createComment(payload, postId);
   };
 
   useEffect(() => {
-    if (endOfCommentsRef.current) {
-      endOfCommentsRef.current.scrollIntoView({ behavior: "smooth" });
+    if (isScrollOnNewComment) {
+      endOfCommentsRef.current?.scrollIntoView({ behavior: "smooth" });
+      setIsScrollOnNewComment(false);
     }
-  }, [optimisticComments]);
+  }, [optimisticComments, isScrollOnNewComment]);
 
   return (
     <>
