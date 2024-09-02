@@ -4,7 +4,7 @@ import { formatToWon } from "@/lib/utils";
 import { UserIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import getProduct from "@/lib/get-product";
 import { unstable_cache as nextCache, revalidateTag } from "next/cache";
 
@@ -68,6 +68,34 @@ export default async function ProductDetail({
   // 소유자인지 확인
   const isOwner = await getIsOwner(product.userId);
 
+  const createChatRoom = async () => {
+    "use server";
+    const session = await getSession();
+    // chatroom 생성
+    const room = await db.chatRoom.create({
+      data: {
+        users: {
+          // users relationship 연결
+          connect: [
+            {
+              // 판매자 id
+              id: product.userId,
+            },
+            {
+              // 로그인 유저 id
+              id: session.id,
+            },
+          ],
+        },
+      },
+      // 반환할 값 선택
+      select: {
+        id: true,
+      },
+    });
+    redirect(`/chats/${room.id}`);
+  };
+
   return (
     <>
       <div className="mb-24">
@@ -113,21 +141,19 @@ export default async function ProductDetail({
             편집
           </Link>
         ) : null}
-        {isOwner ? (
-          <Link
-            className="bg-orange-500 px-5 py-2.5 rounded-md text-white font-semibold"
-            href={``}
-          >
-            채팅보기
-          </Link>
-        ) : (
-          <Link
-            className="bg-orange-500 px-5 py-2.5 rounded-md text-white font-semibold"
-            href={``}
-          >
+        {/* {isOwner ? (
+          <form action="">
+            <button className="bg-orange-500 px-5 py-2.5 rounded-md text-white font-semibold">
+              채팅보기
+            </button>
+          </form>
+        ) : ( */}
+        <form action={createChatRoom}>
+          <button className="bg-orange-500 px-5 py-2.5 rounded-md text-white font-semibold">
             채팅하기
-          </Link>
-        )}
+          </button>
+        </form>
+        {/* )} */}
       </div>
     </>
   );
