@@ -22,6 +22,8 @@ model User {
   posts      Post[]
   comments   Comment[]
   likes      Like[]
+  chat_rooms ChatRoom[]
+  Messages   Message[]
 }
 
 model SMSToken {
@@ -80,4 +82,28 @@ model Like {
   postId     Int
 
   @@id(name: "id", [userId, postId]) // userId와 postId의 조합(key로 사용)을 보고 unique한지 판별
+}
+
+model ChatRoom {
+  // id를 Int로 지정하는 경우 보안에 좋지 못함
+  // cuid()는 무작위로 보이는 랜덤string을 줌
+  id    String @id @default(cuid())
+  users User[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  Messages   Message[]
+}
+
+model Message {
+  id      Int    @id @default(autoincrement())
+  payload String
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  room       ChatRoom @relation(fields: [chatRoomId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  chatRoomId String
+  userId     Int
 }

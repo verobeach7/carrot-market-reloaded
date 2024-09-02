@@ -69,35 +69,37 @@ export default async function ProductDetail({
   const isOwner = await getIsOwner(product.userId);
 
   return (
-    <div>
-      <div className="relative aspect-square">
-        <Image
-          fill
-          className="object-cover"
-          src={`${product.photo}/public`}
-          alt={product.title}
-        />
-      </div>
-      <div className="p-5 flex items-center gap-3 border-b border-neutral-700">
-        <div className="size-10 overflow-hidden rounded-full">
-          {product.user.avatar !== null ? (
-            <Image
-              src={product.user.avatar}
-              width={40}
-              height={40}
-              alt={product.user.username}
-            />
-          ) : (
-            <UserIcon className="size-10" />
-          )}
+    <>
+      <div className="mb-24">
+        <div className="relative aspect-square">
+          <Image
+            fill
+            className="object-cover"
+            src={`${product.photo}/public`}
+            alt={product.title}
+          />
         </div>
-        <div>
-          <h3>{product.user.username}</h3>
+        <div className="p-5 flex items-center gap-3 border-b border-neutral-700">
+          <div className="size-10 overflow-hidden rounded-full">
+            {product.user.avatar !== null ? (
+              <Image
+                src={product.user.avatar}
+                width={40}
+                height={40}
+                alt={product.user.username}
+              />
+            ) : (
+              <UserIcon className="size-10" />
+            )}
+          </div>
+          <div>
+            <h3>{product.user.username}</h3>
+          </div>
         </div>
-      </div>
-      <div className="p-5">
-        <h1 className="text-2xl font-semibold">{product.title}</h1>
-        <p>{product.description}</p>
+        <div className="p-5">
+          <h1 className="text-2xl font-semibold">{product.title}</h1>
+          <p>{product.description}</p>
+        </div>
       </div>
       <div className="fixed w-full bottom-0 p-5 pb-10 bg-neutral-800 flex justify-between items-center max-w-screen-md mx-auto">
         <span className="font-semibold text-xl">
@@ -127,7 +129,7 @@ export default async function ProductDetail({
           </Link>
         )}
       </div>
-    </div>
+    </>
   );
 }
 
