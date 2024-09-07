@@ -72,6 +72,20 @@ export default function ChatMessagesList({
           </div>
         </div>
       ))}
+      <form className="flex relative" onSubmit={onSubmit}>
+        <input
+          required
+          onChange={onChange}
+          value={message}
+          className="bg-transparent rounded-full w-full h-10 focus:outline-none px-5 ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-neutral-50 border-none placeholder:text-neutral-400"
+          type="text"
+          name="message"
+          placeholder="Write a message..."
+        />
+        <button className="absolute right-0">
+          <ArrowUpCircleIcon className="size-10 text-orange-500 transition-colors hover:text-orange-300" />
+        </button>
+      </form>
     </div>
   );
 }
