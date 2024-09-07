@@ -1,5 +1,7 @@
+import ChatMessagesList from "@/components/chat-messages-list";
 import db from "@/lib/db";
 import getSession from "@/lib/session";
+import { Prisma } from "@prisma/client";
 import { notFound } from "next/navigation";
 
 async function getRoom(id: string) {
@@ -30,10 +32,42 @@ async function getRoom(id: string) {
   return room;
 }
 
+async function getMessages(chatRoomId: string) {
+  const messages = await db.message.findMany({
+    where: {
+      chatRoomId,
+    },
+    select: {
+      id: true,
+      payload: true,
+      created_at: true,
+      userId: true,
+      user: {
+        select: {
+          avatar: true,
+          username: true,
+        },
+      },
+    },
+  });
+  return messages;
+}
+
+// Prisma 함수가 반환하는 데이터의 타입
+export type InitialChatMessages = Prisma.PromiseReturnType<typeof getMessages>;
+
 export default async function ChatRoom({ params }: { params: { id: string } }) {
   const room = await getRoom(params.id);
   if (!room) {
     return notFound();
   }
-  return <h1>chat!!!!!</h1>;
+  /* products의 무한스크롤 방식을 사용해 실시간 채팅 코딩 */
+  // 초기 메시지는 새로고침하거나 채팅방에 처음 들어왔을 때 메시지를 가져와 보여주는 것
+  // state에 저장하여 새로운 메시지가 발생했을 때 state를 갱신하여 보여줄 수 있어야 함
+  const initialMessages = await getMessages(params.id);
+  const session = await getSession();
+
+  return (
+    <ChatMessagesList userId={session.id!} initialMessages={initialMessages} />
+  );
 }
