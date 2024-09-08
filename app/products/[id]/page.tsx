@@ -71,28 +71,51 @@ export default async function ProductDetail({
   const createChatRoom = async () => {
     "use server";
     const session = await getSession();
-    // chatroom 생성
-    const room = await db.chatRoom.create({
-      data: {
+    // 이미 chatroom이 존재하는지 확인
+    const rooms = await db.chatRoom.findMany({
+      where: {
+        productId: product.id,
         users: {
-          // users relationship 연결
-          connect: [
-            {
-              // 판매자 id
-              id: product.userId,
-            },
-            {
-              // 로그인 유저 id
-              id: session.id,
-            },
-          ],
+          some: {
+            id: session.id,
+          },
         },
       },
-      // 반환할 값 선택
       select: {
         id: true,
       },
     });
+    const room = rooms[0];
+    console.log("AlreadyExistRoom", room);
+    if (!room) {
+      // chatroom 생성
+      const room = await db.chatRoom.create({
+        data: {
+          users: {
+            // users relationship 연결
+            connect: [
+              {
+                // 판매자 id
+                id: product.userId,
+              },
+              {
+                // 로그인 유저 id
+                id: session.id,
+              },
+            ],
+          },
+          product: {
+            connect: {
+              id: product.id,
+            },
+          },
+        },
+        // 반환할 값 선택
+        select: {
+          id: true,
+        },
+      });
+    }
     redirect(`/chats/${room.id}`);
   };
 

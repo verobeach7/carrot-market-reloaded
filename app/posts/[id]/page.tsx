@@ -158,13 +158,19 @@ export default async function PostDetail({
   return (
     <div className="p-5 text-white mb-20">
       <div className="flex items-center gap-2 mb-2">
-        <Image
-          width={28}
-          height={28}
-          className="size-7 rounded-full"
-          src={post.user.avatar!}
-          alt={post.user.username}
-        />
+        {post.user.avatar === null ? (
+          <div className="size-8 rounded-full bg-neutral-400 flex items-center justify-center">
+            {post.user.username.slice(0, 1)}
+          </div>
+        ) : (
+          <Image
+            width={28}
+            height={28}
+            className="size-7 rounded-full"
+            src={post.user.avatar!}
+            alt={post.user.username}
+          />
+        )}
         <div>
           <span className="text-sm font-semibold">{post.user.username}</span>
           <div className="text-xs">

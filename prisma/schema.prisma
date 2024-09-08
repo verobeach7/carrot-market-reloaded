@@ -38,15 +38,16 @@ model SMSToken {
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   title       String
   price       Float
   description String
   photo       String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
+  ChatRoom    ChatRoom[]
 }
 
 model Post {
@@ -87,12 +88,14 @@ model Like {
 model ChatRoom {
   // id를 Int로 지정하는 경우 보안에 좋지 못함
   // cuid()는 무작위로 보이는 랜덤string을 줌
-  id    String @id @default(cuid())
-  users User[]
+  id      String  @id @default(cuid())
+  users   User[]
+  product Product @relation(fields: [productId], references: [id])
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   Messages   Message[]
+  productId  Int
 }
 
 model Message {

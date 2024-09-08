@@ -58,9 +58,13 @@ export function CommentsList({ comments, postId, me }: ICommentListProps) {
       return [...prevComments, newComment];
     }
   );
+  console.log("optimisticComments", optimisticComments);
   const handleSubmit = async (payload: string, postId: number) => {
     const newComment = {
-      id: optimisticComments[optimisticComments.length - 1].id + 1,
+      id:
+        optimisticComments.length === 0
+          ? 1
+          : optimisticComments[optimisticComments.length - 1].id + 1,
       payload,
       postId,
       userId: me.id,
