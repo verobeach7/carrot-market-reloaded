@@ -17,6 +17,7 @@ export default function ListProduct({
   photo,
   id,
 }: ListProductProps) {
+  // console.log(title);
   return (
     <Link href={`/products/${id}`} className="flex gap-5">
       {/* 이미지 사이즈가 다양하거나 모를 때는 아래처럼 하여 일관되게 적용할 수 있음 */}

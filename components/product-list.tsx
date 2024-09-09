@@ -22,6 +22,7 @@ interface ProductListProps {
 
 export default function ProductList({ initialProducts }: ProductListProps) {
   const [products, setProducts] = useState(initialProducts);
+  // console.log(products);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [isLastPage, setIsLastPage] = useState(false);

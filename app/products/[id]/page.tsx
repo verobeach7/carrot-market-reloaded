@@ -70,9 +70,10 @@ export default async function ProductDetail({
 
   const createChatRoom = async () => {
     "use server";
+    let room;
     const session = await getSession();
     // 이미 chatroom이 존재하는지 확인
-    const rooms = await db.chatRoom.findMany({
+    const roomsAlreadyExist = await db.chatRoom.findMany({
       where: {
         productId: product.id,
         users: {
@@ -85,11 +86,13 @@ export default async function ProductDetail({
         id: true,
       },
     });
-    const room = rooms[0];
-    console.log("AlreadyExistRoom", room);
+    if (roomsAlreadyExist) {
+      room = roomsAlreadyExist[0];
+      console.log("AlreadyExistRoom", room);
+    }
     if (!room) {
       // chatroom 생성
-      const room = await db.chatRoom.create({
+      room = await db.chatRoom.create({
         data: {
           users: {
             // users relationship 연결

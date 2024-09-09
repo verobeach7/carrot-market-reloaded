@@ -33,6 +33,7 @@ async function getInitialProducts() {
       created_at: "desc",
     },
   });
+  // console.log(products);
   return products;
 }
 
@@ -60,7 +61,7 @@ export default async function Products() {
     revalidatePath("/home");
   }; */
   return (
-    <div>
+    <div className="pb-20">
       <ProductList initialProducts={initialProducts} />
       {/* <form action={revalidate}>
         <button>Revalidate</button>
