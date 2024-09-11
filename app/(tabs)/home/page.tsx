@@ -27,7 +27,8 @@ async function getInitialProducts() {
       id: true,
     },
     // take: 몇 개의 데이터를 가져올지 지정할 수 있음
-    // take: 1,
+    // take를 수정하는 경우 product-list.tsx의 observer에서 사용되는 getMoreProducts server action에서 skip과 take 수도 바꿔줘야 함
+    take: 2,
     orderBy: {
       // asc: 오름차순 - 오래된 것부터 보임, desc: 내림차순 - 최근 것부터 보임
       created_at: "desc",

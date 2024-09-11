@@ -30,6 +30,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
   const trigger = useRef<HTMLSpanElement>(null);
   // page value가 변경되면 내부 function이 실행됨
   useEffect(() => {
+    console.log("use effect");
     // Creating the Observer: trigger를 obsever함
     const observer = new IntersectionObserver(
       async (
@@ -57,7 +58,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
       },
       {
         // threshold: 1.0: trigger가 100% 표시될 때까지 기다린다는 뜻
-        threshold: 1.0,
+        threshold: 0,
         rootMargin: "0px 0px -100px 0px", // 나중에 로딩이 자동으로 안 될 시 이 부분 확인!!!!!!!!!!!!!!!!!!
       }
     );
@@ -69,6 +70,8 @@ export default function ProductList({ initialProducts }: ProductListProps) {
       observer.disconnect();
     };
   }, [page]);
+  // console.log("products length", products.length);
+  // console.log("page", page);
   return (
     <div className="p-5 flex flex-col gap-5">
       {products.map((product) => (
