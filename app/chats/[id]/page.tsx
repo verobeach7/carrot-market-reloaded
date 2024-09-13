@@ -53,6 +53,21 @@ async function getMessages(chatRoomId: string) {
   return messages;
 }
 
+/* chatMessagesList 내에 사용될 broadcast message를 위해 서버측에서 보내줘야 함 */
+async function getUserProfile() {
+  const session = await getSession();
+  const user = await db.user.findUnique({
+    where: {
+      id: session.id,
+    },
+    select: {
+      username: true,
+      avatar: true,
+    },
+  });
+  return user;
+}
+
 // Prisma 함수가 반환하는 데이터의 타입
 export type InitialChatMessages = Prisma.PromiseReturnType<typeof getMessages>;
 
@@ -67,10 +82,17 @@ export default async function ChatRoom({ params }: { params: { id: string } }) {
   const initialMessages = await getMessages(params.id);
   const session = await getSession();
 
+  const user = await getUserProfile();
+  if (!user) {
+    return notFound();
+  }
+
   return (
     <ChatMessagesList
       chatRoomId={params.id}
       userId={session.id!}
+      username={user.username}
+      avatar={user.avatar!}
       initialMessages={initialMessages}
     />
   );

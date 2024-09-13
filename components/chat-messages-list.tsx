@@ -24,12 +24,16 @@ interface IChatMessageListProps {
   initialMessages: InitialChatMessages;
   userId: number;
   chatRoomId: string;
+  username: string;
+  avatar: string;
 }
 
 export default function ChatMessagesList({
   initialMessages,
   userId,
   chatRoomId,
+  username,
+  avatar,
 }: IChatMessageListProps) {
   const [messages, setMessages] = useState(initialMessages);
   const [message, setMessage] = useState("");
@@ -67,7 +71,16 @@ export default function ChatMessagesList({
       type: "broadcast",
       // event에 들어가는 것("message")과 채널을 만들 때 필터링 했던 event에 들어가는 것("message")이 일치해야 함
       event: "message",
-      payload: { message },
+      payload: {
+        id: Date.now(),
+        payload: message,
+        created_at: new Date(),
+        userId,
+        user: {
+          username,
+          avatar,
+        },
+      },
     });
     setMessage("");
   };
@@ -85,7 +98,7 @@ export default function ChatMessagesList({
     // useRef를 사용하므로 여기서도 .current를 붙여줘야 함
     channel.current
       .on("broadcast", { event: "message" }, (payload) => {
-        console.log(payload);
+        setMessages((prevMsgs) => [...prevMsgs, payload.payload]);
       })
       .subscribe();
     /* Step 3. useEffect는 return 값을 주면 clean-up function으로 작동하게 할 수 있음 */
