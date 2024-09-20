@@ -98,7 +98,7 @@ export default function ChatRoomsList({
     };
   }, [chatRooms]);
   return (
-    <div className="p-10 flex flex-col gap-5">
+    <div className="p-10 pb-20 flex flex-col gap-5">
       {chatRooms.map((chatRoom) => (
         <Link
           href={`/chats/${chatRoom.id}`}
@@ -106,7 +106,7 @@ export default function ChatRoomsList({
           className="flex justify-between mb-10 gap-20 *:text-white"
         >
           <div className="flex gap-20">
-            <div className="relative">
+            <div className="relative z-0">
               <div className="absolute z-10 -top-3 -left-3 size-12 rounded-full bg-neutral-700">
                 {chatRoom.users[0] === undefined ? (
                   <div className="size-12 rounded-full bg-neutral-400 flex items-center justify-center">
