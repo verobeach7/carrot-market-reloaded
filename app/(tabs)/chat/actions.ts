@@ -55,9 +55,9 @@ export async function getChatRooms(userId: number) {
 
   // 최근 메시지(created_at)를 기준으로 정렬
   chatRooms.sort((a, b) => {
-    const messageA = a.Messages[0]?.created_at || new Date(0); // 메시지가 없을 때 대비
-    const messageB = b.Messages[0]?.created_at || new Date(0);
-    return messageB.getTime() - messageA.getTime(); // 내림차순 정렬 (최신순)
+    const createdAtA = a.Messages[0]?.created_at || new Date(0); // 메시지가 없을 때 대비
+    const createdAtB = b.Messages[0]?.created_at || new Date(0);
+    return createdAtB.getTime() - createdAtA.getTime(); // 내림차순 정렬 (최신순)
   });
 
   return chatRooms;

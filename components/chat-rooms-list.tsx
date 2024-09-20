@@ -34,7 +34,6 @@ export default function ChatRoomsList({
   useEffect(() => {
     // 각 ChatRoom의 id를 이용해 채널을 생성
     chatRooms.forEach((chatRoom) => {
-      console.log("channels made", chatRoom.id);
       const channel = client
         .channel(`room-${chatRoom.id}`)
         .on(
@@ -43,14 +42,21 @@ export default function ChatRoomsList({
             event: "message",
           },
           (payload) => {
-            console.log(`Change in chatroom ${chatRoom.id}:`, payload);
-            const newMessage = payload.payload;
-            console.log(newMessage);
+            const newMessage = payload.payload as {
+              id: number;
+              payload: string;
+              isRead: boolean;
+              created_at: Date;
+              updated_at: Date;
+              chatRoomId: string;
+              userId: number;
+            };
+            console.log(payload.payload);
 
             if (newMessage) {
               // 새 메시지가 삽입된 경우 채팅방 목록 업데이트
-              setChatRooms((prevChatRooms) =>
-                prevChatRooms.map((room) =>
+              setChatRooms((prevChatRooms) => {
+                const newChatRooms = prevChatRooms.map((room) =>
                   room.id === chatRoom.id
                     ? {
                         ...room,
@@ -58,8 +64,23 @@ export default function ChatRoomsList({
                         _count: { Messages: room._count.Messages + 1 },
                       }
                     : room
-                )
-              );
+                );
+
+                // 새로운 채팅방 목록을 메시지의 created_at 시간 순으로 정렬
+                newChatRooms.sort((a, b) => {
+                  const createdAtA =
+                    a.Messages.length > 0
+                      ? new Date(a.Messages[0].created_at).getTime()
+                      : new Date(0).getTime(); // Messages가 없으면 기본값
+                  const createdAtB =
+                    b.Messages.length > 0
+                      ? new Date(b.Messages[0].created_at).getTime()
+                      : new Date(0).getTime(); // Messages가 없으면 기본값
+                  return createdAtB - createdAtA; // 최신 메시지가 먼저 오도록 정렬
+                });
+
+                return newChatRooms;
+              });
             }
           }
         )
@@ -159,60 +180,3 @@ export default function ChatRoomsList({
     </div>
   );
 }
-
-/* useEffect(() => {
-    // 각 ChatRoom의 id를 이용해 채널을 생성
-    initialChatRooms.forEach((chatRoom) => {
-      const channel = client
-        .channel(`chatroom-${chatRoom.id}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "messages",
-            filter: `chatRoomId=eq.${chatRoom.id}`,
-          },
-          (payload) => {
-            console.log(`Change in chatroom ${chatRoom.id}:`, payload);
-            // 실시간 데이터 처리 로직
-            if (payload.eventType === "INSERT") {
-              const newMessage = payload.new as {
-                id: number;
-                payload: string;
-                isRead: boolean;
-                created_at: Date;
-                updated_at: Date;
-                chatRoomId: string;
-                userId: number;
-              };
-
-              if (newMessage) {
-                // 새 메시지가 삽입된 경우 채팅방 목록 업데이트
-                setChatRooms((prev) =>
-                  prev.map((room) =>
-                    room.id === chatRoom.id
-                      ? {
-                          ...room,
-                          Messages: [...room.Messages, newMessage], // 타입을 명확하게 정의한 상태로 처리
-                        }
-                      : room
-                  )
-                );
-              }
-            }
-          }
-        )
-        .subscribe();
-
-      // Ref에 생성한 채널 저장
-      channels.current.push(channel);
-    });
-
-    // 컴포넌트 언마운트 시 모든 채널 구독 해제
-    return () => {
-      channels.current.forEach((channel) => {
-        client.removeChannel(channel);
-      });
-    };
-  }, [initialChatRooms]); */
