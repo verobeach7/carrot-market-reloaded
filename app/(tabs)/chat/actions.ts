@@ -4,13 +4,12 @@ import db from "@/lib/db";
 import getSession from "@/lib/session";
 import { notFound } from "next/navigation";
 
-export async function getChatRooms() {
-  const session = await getSession();
+export async function getChatRooms(userId: number) {
   const chatRooms = await db.chatRoom.findMany({
     where: {
       users: {
         some: {
-          id: session.id,
+          id: userId,
         },
       },
     },
@@ -28,7 +27,7 @@ export async function getChatRooms() {
             where: {
               isRead: false,
               userId: {
-                not: session.id, // 로그인 유저의 메시지가 아닌 경우
+                not: userId, // 로그인 유저의 메시지가 아닌 경우
               },
             },
           },
@@ -37,7 +36,7 @@ export async function getChatRooms() {
       users: {
         where: {
           id: {
-            not: session.id,
+            not: userId,
           },
         },
         select: {

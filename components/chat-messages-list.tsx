@@ -4,7 +4,7 @@
 // 새 message가 들어오면 state에 추가
 
 import { InitialChatMessages } from "@/app/chats/[id]/page";
-import { saveMessage } from "@/app/chats/[id]/actions";
+import { saveMessage, updateMessagesAsRead } from "@/app/chats/[id]/actions";
 import { formatToTimeAgo } from "@/lib/utils";
 import { ArrowUpCircleIcon } from "@heroicons/react/24/solid";
 import { createClient, RealtimeChannel } from "@supabase/supabase-js";
@@ -39,12 +39,21 @@ export default function ChatMessagesList({
   const [messages, setMessages] = useState(initialMessages);
   const [message, setMessage] = useState("");
 
+  // console.log("messages", messages);
+
   /* Step 4. useRef는 컴포넌트 내의 여러 함수 사이에서 데이터를 저장하고 공유하는 데에 굉장히 편리함 */
   // useRef()는 단순히 데이터를 넣을 상자를 제공해주는 역할을 함
   // useRef 안에는 수정 가능한 데이터가 들어가고 수정되어도 re-rendering이 발생하지 않게 됨
   // useRef는 단지 input 또는 form의 ref attribute로만 사용된다고 생각하지만 이는 잘못된 것
   // 즉, 컴포넌트가 어떠한 이유로 렌더링이 여러번 발생하더라도 데이터는 그대로 유지되며, useRef 자신의 데이터가 변경되더라도 랜더링을 다시 발생시키지 않음
   const channel = useRef<RealtimeChannel>();
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const {
@@ -54,6 +63,7 @@ export default function ChatMessagesList({
   };
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    /* fake message 데이터를 만들어 state 변경 */
     setMessages((prevMsgs) => [
       ...prevMsgs,
       {
@@ -69,6 +79,7 @@ export default function ChatMessagesList({
         },
       },
     ]);
+    /* supabase broadcast를 이용하여 채팅방에 들어와 있는 사용자에게 message 전달 */
     channel.current?.send({
       type: "broadcast",
       // event에 들어가는 것("message")과 채널을 만들 때 필터링 했던 event에 들어가는 것("message")이 일치해야 함
@@ -85,13 +96,34 @@ export default function ChatMessagesList({
         },
       },
     });
+
+    /* DB에 message 저장 */
     await saveMessage(message, chatRoomId);
+
     setMessage("");
+  };
+
+  /* supabase channel.on으로 message 수신 시 DB에서 isRead를 true로 변경 */
+  const markLastMessageAsRead = async (lastMessageId: number) => {
+    // console.log(lastMessageId);
+    await updateMessagesAsRead(chatRoomId, userId);
+    // console.log("update messages as read successfully");
+  };
+
+  /* 수신확인 시 broadcast를 보냄 */
+  const sendReceipt = () => {
+    // console.log("message-receipt");
+    channel.current?.send({
+      type: "broadcast",
+      event: "message-receipt",
+      payload: {},
+    });
   };
 
   /* useEffect내 코드는 판매자와 구매자 모두에게 적용됨, 즉 둘 다 동일한 채널에 있게됨 */
   // 시작할 때와 chatRoomId가 변경될 때만 useEffect가 작동하도록 함
   useEffect(() => {
+    sendReceipt();
     // 채팅방은 아무나 접근할 수 없어야 하기 때문에 고유하면서 아무도 추측할 수 없는 랜덤string으로 해야함
     // 채널에 참여
     // useRef를 사용하면서 const로 channel을 이미 생성하였으므로, 여기서는 const를 삭제하고 .current를 붙여줘야 함
@@ -102,15 +134,40 @@ export default function ChatMessagesList({
     // useRef를 사용하므로 여기서도 .current를 붙여줘야 함
     channel.current
       .on("broadcast", { event: "message" }, (payload) => {
-        setMessages((prevMsgs) => [...prevMsgs, payload.payload]);
+        const newMessage = payload.payload;
+        // messages state를 변경하여 수신받은 message를 보여줌
+        setMessages((prevMsgs) => [...prevMsgs, newMessage]);
+        // DB에서 isRead를 true로 변경. 즉, 읽음처리
+        markLastMessageAsRead(newMessage.id);
+        // 수신했음을 알리는 broadcast 보내기
+        sendReceipt();
+      })
+      .on("broadcast", { event: "message-receipt" }, () => {
+        // 마지막 메시지의 isRead를 true로 변경하여 state가 UI에 적용되도록 함
+        setMessages((prevMsgs) => {
+          if (prevMsgs.length === 0) return prevMsgs;
+
+          return prevMsgs.map((msg, index) =>
+            index === prevMsgs.length - 1 ? { ...msg, isRead: true } : msg
+          );
+        });
       })
       .subscribe();
+
     /* Step 3. useEffect는 return 값을 주면 clean-up function으로 작동하게 할 수 있음 */
     // 해당 컴포넌트에서 나가면 더이상 subscribe를 해지하여 메모리 누수를 막아야 함
     return () => {
       channel.current?.unsubscribe();
     };
   }, [chatRoomId]);
+
+  /* 메시지가 보내지면 마지막 메시지 위치로 자동 이동 */
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (userId === lastMessage.userId) scrollToBottom();
+    }
+  }, [messages]);
 
   return (
     <>
@@ -125,15 +182,21 @@ export default function ChatMessagesList({
             }`}
           >
             {message.userId === userId ? (
-              <div className="flex flex-col justify-between">
-                {/* {index === messages.length - 1 && (
-                <span className="text-xs">
+              <div
+                className={`flex flex-col ${
+                  index === messages.length - 1
+                    ? "justify-between"
+                    : "justify-end"
+                } items-end`}
+              >
+                {index === messages.length - 1 && (
+                  <span className="text-xs">
+                    {message.isRead ? "읽음" : "전송됨"}
+                  </span>
+                )}
+                {/* <span className="text-xs">
                   {message.isRead ? "읽음" : "전송됨"}
-                </span>
-              )} */}
-                <span className="text-xs">
-                  {message.isRead ? "읽음" : "전송됨"}
-                </span>
+                </span> */}
                 <span className="text-xs">
                   {formatToTimeAgo(message.created_at.toString())}
                 </span>
@@ -170,10 +233,10 @@ export default function ChatMessagesList({
             </span> */}
             </div>
             {message.userId === userId ? null : (
-              <div className="flex flex-col justify-between">
-                <span className="text-xs">
+              <div className="flex flex-col justify-end">
+                {/* <span className="text-xs">
                   {message.isRead ? "읽음" : "전송됨"}
-                </span>
+                </span> */}
                 <span className="text-xs">
                   {formatToTimeAgo(message.created_at.toString())}
                 </span>
@@ -181,6 +244,7 @@ export default function ChatMessagesList({
             )}
           </div>
         ))}
+        <div ref={bottomRef} />
       </div>
       <div className="flex items-center justify-center fixed bottom-0 right-0 w-full p-5 bg-neutral-900">
         <form className="flex relative w-full" onSubmit={onSubmit}>
