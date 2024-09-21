@@ -1,4 +1,5 @@
-export default function Extras() {
+export default function Extras({ params }: { params: { potato: string[] } }) {
+  console.log(params);
   // tailwind.config.ts에서 만든 className을 활용하여 폰트 적용
   return (
     <div className="flex flex-col gap-3 py-10">

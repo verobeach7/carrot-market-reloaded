@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   // console.log(roboto);
-  console.log(metallica);
+  // console.log(metallica);
   return (
     <html lang="en">
       {/* <body
