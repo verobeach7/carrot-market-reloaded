@@ -1,27 +1,36 @@
+import HackedComponent from "@/components/hacked-component";
+import { Message } from "firebase-functions/v1/pubsub";
 import { revalidatePath } from "next/cache";
+import {
+  experimental_taintObjectReference,
+  experimental_taintUniqueValue,
+} from "react";
 
 async function getData() {
-  fetch("https://nomad-movies.nomadcoders.workers.dev/movies");
+  const keys = {
+    apiKey: "119119119", // 공개되어도 되는 key
+    secret: "top-secret", // 공개되어서는 안 되는 key
+  };
+  /* first argument: Error Message
+  second argument: Secret object */
+  // experimental_taintObjectReference("API keys were leaked!!!", keys);
+
+  /*  */
+  experimental_taintUniqueValue("Secret key was exposed.", keys, keys.secret);
+
+  // 현재까지는 server 내에 있기 때문에 return해도 아무 상관없음
+  return keys;
 }
 
+// Client Component로 data가 전달되면서 에러 발생
 export default async function Extras() {
-  await getData();
-
-  const action = async () => {
-    "use server";
-    console.log("hit");
-    revalidatePath("/extras");
-  };
-
-  // tailwind.config.ts에서 만든 className을 활용하여 폰트 적용
+  const data = await getData();
   return (
     <div className="flex flex-col gap-3 py-10">
       <h1 className="text-6xl font-rubik">Extras!</h1>
       <h1 className="text-6xl font-metallica">Extras!</h1>
       <h2 className="font-roboto">So much more to learn!</h2>
-      <form action={action}>
-        <button>revalidate</button>
-      </form>
+      <HackedComponent data={data} />
     </div>
   );
 }
