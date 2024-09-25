@@ -3,6 +3,6 @@
 import { fetchFromAPI } from "@/app/extras/actions";
 
 export default function HackedComponent({ data }: any) {
-  fetchFromAPI();
+  // fetchFromAPI();
   return <h1>Hacked</h1>;
 }
