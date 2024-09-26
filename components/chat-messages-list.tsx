@@ -159,7 +159,7 @@ export default function ChatMessagesList({
     return () => {
       channel.current?.unsubscribe();
     };
-  }, [chatRoomId]);
+  }, [chatRoomId, markLastMessageAsRead]);
 
   /* 메시지가 보내지면 마지막 메시지 위치로 자동 이동 */
   useEffect(() => {
@@ -167,7 +167,7 @@ export default function ChatMessagesList({
       const lastMessage = messages[messages.length - 1];
       if (userId === lastMessage.userId) scrollToBottom();
     }
-  }, [messages]);
+  }, [messages, userId]);
 
   return (
     <>
